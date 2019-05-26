@@ -85,7 +85,6 @@ public int raycastConsistencyTracker;
   
 // persistence data
 public PersistentData persistentData;
-public int persistentDataUpdateCountdown = 100;
 public bool hasLoadedData = false;
  
 // route recording data
@@ -524,8 +523,6 @@ public void Main(string argument)
                 // follow route if set to do that
                 if (followingRoute)
                 {
-                    Warn("Following route. Current waypoint: " + currentRoute.WaypointIndex().ToString());
-                    
                     if (waitingAtStopCountdown == 0)
                     {
                         var dist = Vector3D.Distance(ReferenceBlock.GetPosition(), CurrentTargetLocation);
@@ -564,12 +561,14 @@ public void Main(string argument)
                                     {
                                         forwardInRoute = !forwardInRoute;
                                     }
+                                    Log("Following route. Current waypoint: " + currentRoute.WaypointIndex().ToString());
                                 }
                                 // otherwise, finish and turn off route following
                                 else
                                 {
                                     followingRoute = false;
                                     CurrentTargetLocation = ReferenceBlock.GetPosition();
+                                    Log("Reached end of route.");
                                 }
                             }
                             else
@@ -891,21 +890,13 @@ public void UpdateReferences()
 
 public void UpdatePersistentData()
 {
-    // count down to persistent data update
-    persistentDataUpdateCountdown--;
-      
-    // save persistent data if countdown is at the right time
-    if (persistentDataUpdateCountdown == 0)
+    if (hasLoadedData)
     {
-        if (hasLoadedData)
-        {
-            SavePersistentData(Me);
-        }
-        else
-        {
-            hasLoadedData = LoadPersistentData(Me);
-        }
-        persistentDataUpdateCountdown = 10;
+        SavePersistentData(Me);
+    }
+    else
+    {
+        hasLoadedData = LoadPersistentData(Me);
     }
 }
 
@@ -1348,7 +1339,11 @@ public bool LoadPersistentData(IMyTerminalBlock store)
         followingRoute = persistentData.FollowingRoute;
         currentRoute = persistentData.Route;
         if (followRoutes)
+        {
+            currentRoute.MatchToClosestWaypoint(Me.GetPosition());
             CurrentTargetLocation = currentRoute.GetCurrentWaypoint().Position;
+            Log("Following route. Current waypoint: " + currentRoute.WaypointIndex().ToString());
+        }
         return true;
     }
 }
