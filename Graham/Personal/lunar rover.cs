@@ -302,7 +302,7 @@ public void Main(string argument, UpdateType updateType) {
         GridTerminalSystem.GetBlocksOfType<IMyTextPanel>(screens);
         foreach (var screen in screens)
         {
-            screen.WritePublicText(textLine1 + "\n" + textLine2);
+            screen.WriteText(textLine1 + "\n" + textLine2);
         }
     }
     else if (argument == "reset")
