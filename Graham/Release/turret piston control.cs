@@ -1,5 +1,6 @@
-public const float TURRET_MAX_ROT_SPEED = 10f;
-public const float PISTON_MAX_MOV_SPEED = 10f;
+public const float TURRET_MAX_ROT_SPEED = 5f;
+public const float PISTON_MAX_MOV_SPEED_EXTEND = 3f;
+public const float PISTON_MAX_MOV_SPEED_RETRACT = 10f;
 public const float TURRET_MAXIMUM_INPUT = 10f;
 public const float PISTON_MAXIMUM_INPUT = 10f;
 
@@ -13,14 +14,16 @@ public class Turret
     List<IMyMotorStator> m_rotors;
     List<IMyPistonBase> m_pistons;
     float m_rotSpeed;
-    float m_moveSpeed;
+    float m_moveSpeedExtend;
+    float m_moveSpeedRetract;
     string m_name;
     
-    public Turret(string name, float rotSpeed, float moveSpeed)
+    public Turret(string name, float rotSpeed, float moveSpeedExtend, float moveSpeedRetract)
     {
         m_name = name;
         m_rotSpeed = rotSpeed;
-        m_moveSpeed = moveSpeed;
+        m_moveSpeedExtend = moveSpeedExtend;
+        m_moveSpeedRetract = moveSpeedRetract;
         m_rotors = new List<IMyMotorStator>();
         m_pistons = new List<IMyPistonBase>();
     }
@@ -61,9 +64,15 @@ public class Turret
     
     public void Move(Vector3 input)
     {
-        float upSpeed = m_moveSpeed * (input.Y / PISTON_MAXIMUM_INPUT);
-        float rightSpeed = m_moveSpeed * (input.X / PISTON_MAXIMUM_INPUT);
-        float forwardSpeed = -m_moveSpeed * (input.Z / PISTON_MAXIMUM_INPUT);
+        float upSpeed = input.Y / PISTON_MAXIMUM_INPUT;
+        if (input.Y > 0) { upSpeed *= m_moveSpeedRetract; }
+        else { upSpeed *= m_moveSpeedExtend; }
+        float rightSpeed = input.X / PISTON_MAXIMUM_INPUT;
+        if (input.X > 0) { rightSpeed *= m_moveSpeedRetract; }
+        else { rightSpeed *= m_moveSpeedExtend; }
+        float forwardSpeed = input.Z / PISTON_MAXIMUM_INPUT;
+        if (input.Z > 0) { forwardSpeed *= -m_moveSpeedRetract; }
+        else { forwardSpeed *= -m_moveSpeedExtend; }
         
         foreach (var piston in m_pistons)
         {
@@ -169,7 +178,7 @@ public void GatherTurrets(IMyGridTerminalSystem grid)
                 }
                 else
                 {
-                    var turret = new Turret(name, TURRET_MAX_ROT_SPEED, PISTON_MAX_MOV_SPEED);
+                    var turret = new Turret(name, TURRET_MAX_ROT_SPEED, PISTON_MAX_MOV_SPEED_EXTEND, PISTON_MAX_MOV_SPEED_RETRACT);
                     turret.AddRotor(rotor);
                     Turrets.Add(turret);
                     TurretNames.Add(name);
@@ -204,7 +213,7 @@ public void GatherTurrets(IMyGridTerminalSystem grid)
                 }
                 else
                 {
-                    var turret = new Turret(name, TURRET_MAX_ROT_SPEED, PISTON_MAX_MOV_SPEED);
+                    var turret = new Turret(name, TURRET_MAX_ROT_SPEED, PISTON_MAX_MOV_SPEED_EXTEND, PISTON_MAX_MOV_SPEED_RETRACT);
                     turret.AddPiston(piston);
                     Turrets.Add(turret);
                     TurretNames.Add(name);
