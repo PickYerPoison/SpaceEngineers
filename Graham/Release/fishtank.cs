@@ -30,7 +30,7 @@ public void Main(string argument, UpdateType updateType)
 
         foreach (var LCD in LCDs)
         {
-            LCD.WritePublicText(StoredFishtank.ToString()); 
+            LCD.WriteText(StoredFishtank.ToString()); 
         }
     }
 }
@@ -315,8 +315,8 @@ class Fishtank
 {
     public Fishtank()
     {
-        int height = 21;
-        int width = 75;
+        int height = 25;
+        int width = 150;
         display = new List<List<char>>(height);
         for (int i = 0; i < height; i++)
         {
