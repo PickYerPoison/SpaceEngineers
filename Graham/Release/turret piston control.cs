@@ -18,6 +18,11 @@ public class Turret
     float m_moveSpeedRetract;
     string m_name;
     
+    public Turret(string name, float rotSpeed, float moveSpeed) : this(name, rotSpeed, moveSpeed, moveSpeed)
+    {
+        // calls other
+    }
+    
     public Turret(string name, float rotSpeed, float moveSpeedExtend, float moveSpeedRetract)
     {
         m_name = name;
@@ -38,16 +43,16 @@ public class Turret
             bool iniParsed = false;
             iniParsed = _ini.TryParse(rotor.CustomData);
             
-            if (iniParsed == true)
+            if (iniParsed == true && _ini.ContainsKey("turret", "type"))
             {
                 float speed = 0;
                 
                 // direction
-                if (_ini.ContainsKey("turret", "type") && _ini.Get("turret", "type").ToString().ToLower() == "yaw")
+                if (_ini.Get("turret", "type").ToString().ToLower() == "yaw")
                 {
                     speed = yawSpeed;
                 }
-                else if (_ini.ContainsKey("turret", "type") && _ini.Get("turret", "type").ToString().ToLower() == "pitch")
+                else if (_ini.Get("turret", "type").ToString().ToLower() == "pitch")
                 {
                     speed = pitchSpeed;
                 }
@@ -65,36 +70,52 @@ public class Turret
     public void Move(Vector3 input)
     {
         float upSpeed = input.Y / PISTON_MAXIMUM_INPUT;
-        if (input.Y > 0) { upSpeed *= m_moveSpeedRetract; }
-        else { upSpeed *= m_moveSpeedExtend; }
         float rightSpeed = input.X / PISTON_MAXIMUM_INPUT;
-        if (input.X > 0) { rightSpeed *= m_moveSpeedRetract; }
-        else { rightSpeed *= m_moveSpeedExtend; }
         float forwardSpeed = input.Z / PISTON_MAXIMUM_INPUT;
-        if (input.Z > 0) { forwardSpeed *= -m_moveSpeedRetract; }
-        else { forwardSpeed *= -m_moveSpeedExtend; }
         
         foreach (var piston in m_pistons)
         {
             bool iniParsed = false;
             iniParsed = _ini.TryParse(piston.CustomData);
             
-            if (iniParsed == true)
+            if (iniParsed == true && _ini.ContainsKey("turret", "type"))
             {
                 float speed = 0;
                 
                 // direction
-                if (_ini.ContainsKey("turret", "type") && (_ini.Get("turret", "type").ToString().ToLower() == "up" || _ini.Get("turret", "type").ToString().ToLower() == "down"))
+                if (_ini.Get("turret", "type").ToString().ToLower() == "up")
                 {
                     speed = upSpeed;
                 }
-                else if (_ini.ContainsKey("turret", "type") && (_ini.Get("turret", "type").ToString().ToLower() == "left" || _ini.Get("turret", "type").ToString().ToLower() == "right"))
+                else if (_ini.Get("turret", "type").ToString().ToLower() == "down")
+                {
+                    speed = -upSpeed;
+                }
+                else if (_ini.Get("turret", "type").ToString().ToLower() == "right")
                 {
                     speed = rightSpeed;
                 }
-                else if (_ini.ContainsKey("turret", "type") && (_ini.Get("turret", "type").ToString().ToLower() == "forward" || _ini.Get("turret", "type").ToString().ToLower() == "backward"))
+                else if (_ini.Get("turret", "type").ToString().ToLower() == "left")
+                {
+                    speed = -rightSpeed;
+                }
+                else if (_ini.Get("turret", "type").ToString().ToLower() == "forward")
                 {
                     speed = forwardSpeed;
+                }
+                else if (_ini.Get("turret", "type").ToString().ToLower() == "backward")
+                {
+                    speed = -forwardSpeed;
+                }
+                
+                // extend/retract speed
+                if (speed > 0)
+                {
+                    speed *= m_moveSpeedExtend;
+                }
+                else
+                {
+                    speed *= m_moveSpeedRetract;
                 }
                 
                 // inverted
@@ -159,30 +180,27 @@ public void GatherTurrets(IMyGridTerminalSystem grid)
         bool iniParsed = false;
         iniParsed = _ini.TryParse(rotor.CustomData);
         
-        if (iniParsed == true)
+        if (iniParsed == true && _ini.ContainsKey("turret", "name") == true)
         {
-            if (_ini.ContainsKey("turret", "name") == true)
+            var name = _ini.Get("turret", "name").ToString();
+            
+            if (TurretNames.Contains(name) == true)
             {
-                var name = _ini.Get("turret", "name").ToString();
-                
-                if (TurretNames.Contains(name) == true)
+                foreach (var turret in Turrets)
                 {
-                    foreach (var turret in Turrets)
+                    if (turret.Name == name)
                     {
-                        if (turret.Name == name)
-                        {
-                            turret.AddRotor(rotor);
-                            break;
-                        }
+                        turret.AddRotor(rotor);
+                        break;
                     }
                 }
-                else
-                {
-                    var turret = new Turret(name, TURRET_MAX_ROT_SPEED, PISTON_MAX_MOV_SPEED_EXTEND, PISTON_MAX_MOV_SPEED_RETRACT);
-                    turret.AddRotor(rotor);
-                    Turrets.Add(turret);
-                    TurretNames.Add(name);
-                }
+            }
+            else
+            {
+                var turret = new Turret(name, TURRET_MAX_ROT_SPEED, PISTON_MAX_MOV_SPEED_EXTEND, PISTON_MAX_MOV_SPEED_RETRACT);
+                turret.AddRotor(rotor);
+                Turrets.Add(turret);
+                TurretNames.Add(name);
             }
         }
     }
@@ -194,30 +212,27 @@ public void GatherTurrets(IMyGridTerminalSystem grid)
         bool iniParsed = false;
         iniParsed = _ini.TryParse(piston.CustomData);
         
-        if (iniParsed == true)
+        if (iniParsed == true && _ini.ContainsKey("turret", "name") == true)
         {
-            if (_ini.ContainsKey("turret", "name") == true)
+            var name = _ini.Get("turret", "name").ToString();
+            
+            if (TurretNames.Contains(name) == true)
             {
-                var name = _ini.Get("turret", "name").ToString();
-                
-                if (TurretNames.Contains(name) == true)
+                foreach (var turret in Turrets)
                 {
-                    foreach (var turret in Turrets)
+                    if (turret.Name == name)
                     {
-                        if (turret.Name == name)
-                        {
-                            turret.AddPiston(piston);
-                            break;
-                        }
+                        turret.AddPiston(piston);
+                        break;
                     }
                 }
-                else
-                {
-                    var turret = new Turret(name, TURRET_MAX_ROT_SPEED, PISTON_MAX_MOV_SPEED_EXTEND, PISTON_MAX_MOV_SPEED_RETRACT);
-                    turret.AddPiston(piston);
-                    Turrets.Add(turret);
-                    TurretNames.Add(name);
-                }
+            }
+            else
+            {
+                var turret = new Turret(name, TURRET_MAX_ROT_SPEED, PISTON_MAX_MOV_SPEED_EXTEND, PISTON_MAX_MOV_SPEED_RETRACT);
+                turret.AddPiston(piston);
+                Turrets.Add(turret);
+                TurretNames.Add(name);
             }
         }
     }
@@ -233,33 +248,30 @@ public void Main(string argument)
         bool iniParsed = false;
         iniParsed = _ini.TryParse(controller.CustomData);
         
-        if (iniParsed == true)
+        if (iniParsed == true && _ini.ContainsKey("turret", "name") == true)
         {
-            if (_ini.ContainsKey("turret", "name") == true)
+            var name = _ini.Get("turret", "name").ToString();
+            
+            if (controller.IsUnderControl)
             {
-                var name = _ini.Get("turret", "name").ToString();
-                
-                if (controller.IsUnderControl)
+                controlledTurrets.Add(name);
+                foreach (var turret in Turrets)
                 {
-                    controlledTurrets.Add(name);
-                    foreach (var turret in Turrets)
+                    if (turret.Name == name)
                     {
-                        if (turret.Name == name)
-                        {
-                            turret.Move(controller.MoveIndicator);
-                            turret.Rotate(controller.RotationIndicator);
-                        }
+                        turret.Move(controller.MoveIndicator);
+                        turret.Rotate(controller.RotationIndicator);
                     }
                 }
-                else if (controlledTurrets.Contains(name) == false)
+            }
+            else if (controlledTurrets.Contains(name) == false)
+            {
+                foreach (var turret in Turrets)
                 {
-                    foreach (var turret in Turrets)
+                    if (turret.Name == name)
                     {
-                        if (turret.Name == name)
-                        {
-                            turret.Move(new Vector3(0, 0, 0));
-                            turret.Rotate(new Vector2(0, 0));
-                        }
+                        turret.Move(new Vector3(0, 0, 0));
+                        turret.Rotate(new Vector2(0, 0));
                     }
                 }
             }
