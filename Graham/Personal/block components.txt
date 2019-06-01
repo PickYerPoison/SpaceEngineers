@@ -1,0 +1,37 @@
+Large:Small Ion Thruster
+ConstructionComponent 60
+ThrusterComponents 80
+LargeSteelTube 8
+SteelPlate 25
+
+Large:Decorative Pack Cockpit
+SmallSteelTube 10
+BulletproofGlass 80
+Computer 60
+Display 10
+Motor 2
+MetalGrid 15
+ConstructionComponent 30
+SteelPlate 20
+
+Large:Spotlight
+InteriorPlate 60
+ConstructionComponent 20
+Computer 8
+Display 1
+Motor 20
+SmallSteelTube 60
+MetalGrid 24
+ConstructionComponent 60
+InteriorPlate 300
+
+Large:Small Reactor
+Computer 25
+Motor 6
+ReactorComponents 100
+LargeSteelTube 8
+MetalGrid 4
+ConstructionComponent 40
+SteelPlate 80
+
+Large:Passage
