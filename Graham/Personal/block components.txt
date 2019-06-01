@@ -35,17 +35,112 @@ ConstructionComponent 40
 SteelPlate 80
 
 MyObjectBuilder_Passage/(null)
+SmallSteelTube 48
+ConstructionComponent 20
+InteriorPlate 74
+
 MyObjectBuilder_MyProgrammableBlock/LargeProgrammableBlock
-MyObjectBuilder_CubeBlock/LargeSteelCatwalk
+SteelPlate 10
+Computer 2
+Display 1
+Motor 1
+LargeSteelTube 2
+ConstructionComponent 4
+SteelPlate 11
+
+MyObjectBuilder_CubeBlock/LargeSteelCatwalk (one side)
+InteriorPlate 7
+SmallSteelTube 20
+ConstructionComponent 5
+InteriorPlate 20
+
 MyObjectBuilder_ReflectorLight/LargeBlockFrontLight
+BulletproofGlass 4
+ConstructionComponent 15
+InteriorPlate 20
+LargeSteelTube 2
+SteelPlate 8
+
 MyObjectBuilder_MotorAdvancedStator/LargeAdvancedStator
-MyObjectBuilder_Conveyor/LargeBlockConveyor
+SteelPlate 5
+Computer 2
+Motor 4
+LargeSteelTube 4
+ConstructionComponent 10
+SteelPlate 10
+
+MyObjectBuilder_Conveyor/LargeBlockConveyor (junction?)
+InteriorPlate 10
+ConstructionComponent 10
+Motor 6
+SmallSteelTube 20
+ConstructionComponent 20
+InteriorPlate 10
+
 MyObjectBuilder_ConveyorConnector/ConveyorTubeCurved
+InteriorPlate 4
+Motor 6
+SmallSteelTube 12
+ConstructionComponent 20
+InteriorPlate 10
+
 MyObjectBuilder_ShipConnector/Connector
-MyObjectBuilder_LandingGear/LargeBlockLandingGear
+SteelPlate 20
+Computer 20
+Motor 8
+SmallSteelTube 12
+ConstructionComponent 40
+SteelPlate 130
+
 MyObjectBuilder_ConveyorSorter/LargeBlockConveyorSorter
+InteriorPlate 10
+ConstructionComponent 20
+Motor 2
+Computer 20
+SmallSteelTube 50
+ConstructionComponent 100
+InteriorPlate 40
+
+MyObjectBuilder_LandingGear/LargeBlockLandingGear
+SteelPlate 50
+Motor 6
+ConstructionComponent 20
+SteelPlate 100
+
 MyObjectBuilder_Gyro/LargeBlockGyro
+SteelPlate 100
+Computer 5
+Motor 4
+MetalGrid 50
+LargeSteelTube 4
+ConstructionComponent 40
+SteelPlate 500
+
 MyObjectBuilder_Beacon/LargeBlockBeacon
+SteelPlate 40
+RadioComponents 40
+Computer 10
+LargeSteelTube 20
+ConstructionComponent 30
+SteelPlate 40
+
 MyObjectBuilder_Refinery/LargeShipSmallShieldGeneratorBase
+SteelPlate 100
+Computer 50
+LargeSteelTube 30
+ConstructionComponent 500
+ShieldComponent 10
+SteelPlate 150
+
 MyObjectBuilder_OreDetector/LargeOreDetector
+SteelPlate 20
+DetectorComponent 20
+Computer 25
+Motor 5
+ConstructionComponent 40
+SteelPlate 30
+
 MyObjectBuilder_CameraBlock/LargeCameraBlock
+SteelPlate 1
+Computer 3
+SteelPlate 1
