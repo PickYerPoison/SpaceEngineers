@@ -1,3 +1,5 @@
+
+
 Large:Small Ion Thruster
 ConstructionComponent 60
 ThrusterComponents 80
@@ -14,7 +16,7 @@ MetalGrid 15
 ConstructionComponent 30
 SteelPlate 20
 
-Large:Spotlight
+MyObjectBuilder_CargoContainer/LargeBlockLargeContainer
 InteriorPlate 60
 ConstructionComponent 20
 Computer 8
@@ -25,7 +27,7 @@ MetalGrid 24
 ConstructionComponent 60
 InteriorPlate 300
 
-Large:Small Reactor
+MyObjectBuilder_Reactor/LargeBlockSmallGenerator
 Computer 25
 Motor 6
 ReactorComponents 100
@@ -34,4 +36,8 @@ MetalGrid 4
 ConstructionComponent 40
 SteelPlate 80
 
-Large:Passage
+MyObjectBuilder_Passage/(null)
+
+Large:Programmable Block
+
+Large:LargeSteelCatwalk
