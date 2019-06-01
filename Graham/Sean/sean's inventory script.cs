@@ -29,7 +29,7 @@
 
 
 Dictionary<string, List<ContainerRequest>> containerRequests;
-Dictionary<IMyTerminalBlock, Dictionary<string, List<ContainerRequest>>> requestsPerContainer;
+Dictionary<IMyTerminalBlock, Dictionary<string, ContainerRequest>> requestsPerContainer;
 
 List<IMyTerminalBlock> containerBlocks;
 int containerIndex;
@@ -93,7 +93,7 @@ public IEnumerator<bool> populateContainers()
 {
 	Echo("Start Populate");
 	containerRequests = new Dictionary<string, List<ContainerRequest>>();
-	requestsPerContainer = new Dictionary<IMyTerminalBlock, Dictionary<string, List<ContainerRequest>>>();
+	requestsPerContainer = new Dictionary<IMyTerminalBlock, Dictionary<string, ContainerRequest>>();
 
 	List<IMyTerminalBlock> terminalBlocks = new List<IMyTerminalBlock>();
 	GridTerminalSystem.GetBlocksOfType<IMyTerminalBlock>(terminalBlocks);
@@ -129,6 +129,7 @@ public IEnumerator<bool> populateContainers()
 		}
 		Echo("Rule found: " + container.CustomData);
 		string[] requestLines = container.CustomData.Split(new char[] { '\n' });
+        int requestMultiplier = 1;
 		foreach(string line in requestLines)
 		{
 			Echo("Line: " + line);
@@ -136,6 +137,19 @@ public IEnumerator<bool> populateContainers()
 			{
 				continue;
 			}
+            else if (line.ToLower().StartsWith("x"))
+            {
+                // Parse lines of "xN" as multiplying all requests past this point in this container by N.
+                if (int.TryParse(line.Substring(1), out requestMultiplier))
+                {
+                    Echo("Multiplier set to " + requestMultiplier.ToString());
+                }
+                else
+                {
+                    Echo("Invalid request multiplier: " + line);
+                }
+                continue;
+            }
 			string[] requestParts = line.ToLower().Split(new char[] { ' ' });
 			string type = requestParts[0].ToLower();
 			if(!knownCategories.Contains(type))
@@ -149,7 +163,8 @@ public IEnumerator<bool> populateContainers()
 			{
 				if(int.TryParse(requestParts[i], out amount))
 				{
-					Echo("Amount: " + requestParts[i]);
+                    amount *= requestMultiplier;
+					Echo("Amount: " + amount.ToString());
 				}
 				if(requestParts[i].ToLower() == "low")
 				{
@@ -157,21 +172,31 @@ public IEnumerator<bool> populateContainers()
 					lowPriority = true;
 				}
 			}
+            // Do not allow requests of less than 1.
+            if (amount < 0)
+            {
+                continue;
+            }
 			ContainerRequest request = new ContainerRequest(container, type, amount, lowPriority);
+			if(!requestsPerContainer.ContainsKey(container))
+			{
+				requestsPerContainer[container] = new Dictionary<string, ContainerRequest>();
+			}
+			if(!requestsPerContainer[container].ContainsKey(type))
+			{
+                requestsPerContainer[container][type] = request;
+			}
+            else
+            {
+                // Combine all requests of the same item and priority.
+                requestsPerContainer[container][type] += request;
+                Echo("Combined with existing request for " + type + ". New request amount: " + requestsPerContainer[container][type].amount.ToString());
+            }
 			if(!containerRequests.ContainsKey(type))
 			{
 				containerRequests[type] = new List<ContainerRequest>();
 			}
-			containerRequests[type].Add(request);
-			if(!requestsPerContainer.ContainsKey(container))
-			{
-				requestsPerContainer[container] = new Dictionary<string, List<ContainerRequest>>();
-			}
-			if(!requestsPerContainer[container].ContainsKey(type))
-			{
-				requestsPerContainer[container][type] = new List<ContainerRequest>();
-			}
-			requestsPerContainer[container][type].Add(request);
+			containerRequests[type].Add(requestsPerContainer[container][type]);
 			yield return true;
 		}
 	}
@@ -364,15 +389,15 @@ public void processInventory(IMyTerminalBlock container)
 			List<ContainerRequest> conflictingRequests = new List<ContainerRequest>();
 			if(requestsPerContainer.ContainsKey(container) && requestsPerContainer[container].ContainsKey(itemName))
 			{
-				conflictingRequests.AddRange(requestsPerContainer[container][itemName]);
+				conflictingRequests.Add(requestsPerContainer[container][itemName]);
 			}
 			if(requestsPerContainer.ContainsKey(container) && requestsPerContainer[container].ContainsKey(itemCategory))
 			{
-				conflictingRequests.AddRange(requestsPerContainer[container][itemCategory]);
+				conflictingRequests.Add(requestsPerContainer[container][itemCategory]);
 			}
 			if(requestsPerContainer.ContainsKey(container) && requestsPerContainer[container].ContainsKey("all"))
 			{
-				conflictingRequests.AddRange(requestsPerContainer[container]["all"]);
+				conflictingRequests.Add(requestsPerContainer[container]["all"]);
 			}
 			MyDefinitionId definitionID = item.Type;
 			List<ContainerRequest> matchingRequests = new List<ContainerRequest>();
@@ -473,6 +498,18 @@ public struct ContainerRequest
 		this.amount = amount;
 		this.lowPriority = lowPriority;
 	}
+    
+    public static ContainerRequest operator +(ContainerRequest a, ContainerRequest b)
+    {
+        if (a.container == b.container && a.itemName == b.itemName && a.lowPriority == b.lowPriority)
+        {
+            return new ContainerRequest(a.container, a.itemName, a.amount + b.amount, a.lowPriority);
+        }
+        else
+        {
+            return a;
+        }
+    }
 }
 
 public static int compareRequestPriority(ContainerRequest request1, ContainerRequest request2)
@@ -603,6 +640,11 @@ Dictionary<string, string> nameAliases = new Dictionary<string, string> {
 
 public string nearestName(string itemName)
 {
+    if (itemName.Trim() == "")
+    {
+        return itemName;
+    }
+    
 	itemName = itemName.ToLower();
 	if(validNames.Contains(itemName))
 	{
