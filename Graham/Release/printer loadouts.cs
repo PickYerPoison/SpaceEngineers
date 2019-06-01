@@ -355,7 +355,7 @@ public string GetReadout()
                 
                 if (IsCurrentProfileModified() == true)
                 {
-                    readout += " (modified)";
+                    readout += "\n(modified)";
                 }
             }
             
