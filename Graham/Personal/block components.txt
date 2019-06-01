@@ -1,12 +1,10 @@
-
-
-Large:Small Ion Thruster
+MyObjectBuilder_Thrust/LargeBlockSmallThrust
 ConstructionComponent 60
 ThrusterComponents 80
 LargeSteelTube 8
 SteelPlate 25
 
-Large:Decorative Pack Cockpit
+MyObjectBuilder_Cockpit/LargeBlockCockpitIndustrial
 SmallSteelTube 10
 BulletproofGlass 80
 Computer 60
@@ -37,7 +35,17 @@ ConstructionComponent 40
 SteelPlate 80
 
 MyObjectBuilder_Passage/(null)
-
-Large:Programmable Block
-
-Large:LargeSteelCatwalk
+MyObjectBuilder_MyProgrammableBlock/LargeProgrammableBlock
+MyObjectBuilder_CubeBlock/LargeSteelCatwalk
+MyObjectBuilder_ReflectorLight/LargeBlockFrontLight
+MyObjectBuilder_MotorAdvancedStator/LargeAdvancedStator
+MyObjectBuilder_Conveyor/LargeBlockConveyor
+MyObjectBuilder_ConveyorConnector/ConveyorTubeCurved
+MyObjectBuilder_ShipConnector/Connector
+MyObjectBuilder_LandingGear/LargeBlockLandingGear
+MyObjectBuilder_ConveyorSorter/LargeBlockConveyorSorter
+MyObjectBuilder_Gyro/LargeBlockGyro
+MyObjectBuilder_Beacon/LargeBlockBeacon
+MyObjectBuilder_Refinery/LargeShipSmallShieldGeneratorBase
+MyObjectBuilder_OreDetector/LargeOreDetector
+MyObjectBuilder_CameraBlock/LargeCameraBlock
