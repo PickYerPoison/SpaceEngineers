@@ -597,6 +597,7 @@ List<string> validNames = new List<string> {
 	"explosives",
 	"solarcell",
 	"powercell",
+	"canvas",
 
 	"automaticrifleitem",
 	"preciseautomaticrifleitem",
@@ -619,7 +620,11 @@ List<string> validNames = new List<string> {
 
 	"nato_5p56x45mm",
 	"nato_25x184mm",
-	"missile200mm"
+	"missile200mm",
+    
+    // Mod: Energy Shields
+    // https://steamcommunity.com/sharedfiles/filedetails/?id=484504816
+	"shield"
 };
 
 Dictionary<string, string> nameAliases = new Dictionary<string, string> {
