@@ -64,7 +64,7 @@ public void Main(string argument)
         }
     }  
 }  
-  
+
 public void UpdateDoors(IMyGridTerminalSystem grid, List<IMySensorBlock> sensors, List<MyDetectedEntityInfo> detectedEntities)  
 {
     // iterate through delayed door actions
@@ -183,7 +183,7 @@ public void UpdateDoors(IMyGridTerminalSystem grid, List<IMySensorBlock> sensors
                         foreach (var otherDoor in doorGroups[key])
                         {
                             if (otherDoor != door &&
-                                otherDoor.Status != DoorStatus.Closed)
+                                (otherDoor.Status != DoorStatus.Closed || DoorCounters.ContainsKey(otherDoor)))
                             {
                                 canOpen = false;
                                 break;
@@ -191,25 +191,12 @@ public void UpdateDoors(IMyGridTerminalSystem grid, List<IMySensorBlock> sensors
                         }
                     }
                 }
-                
-                // attempt delay, if necessary
-                if (canOpen == true && AIRLOCK_DELAY > 0)
-                {
-                    if (DoorCounters.ContainsKey(door) == false)
-                    {
-                        DoorCounters.Add(door, AIRLOCK_DELAY);
-                    }
-                }
             }
             
             if (canOpen == true)
             {
-                // open the door  
-                if (DoorCounters.ContainsKey(door) == false ||
-                    DoorCounters[door] == 0)
-                {
-                    door.GetActionWithName("Open_On").Apply(door);
-                }
+                // open the door 
+                door.GetActionWithName("Open_On").Apply(door);
             }
             
             // go to the next door
@@ -241,9 +228,20 @@ public void UpdateDoors(IMyGridTerminalSystem grid, List<IMySensorBlock> sensors
         {
             // do not interact with this door
         }
-        else
+        else if (door.Status != DoorStatus.Closed)
         {
             door.GetActionWithName("Open_Off").Apply(door);
+            if (AIRLOCK_DELAY > 0)
+            {
+                if (DoorCounters.ContainsKey(door) == false)
+                {
+                    DoorCounters.Add(door, AIRLOCK_DELAY);
+                }
+                else
+                {
+                    DoorCounters[door] = AIRLOCK_DELAY;
+                }
+            }
         }
     }  
 }  
