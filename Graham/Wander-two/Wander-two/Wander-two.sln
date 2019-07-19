@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wander-two", "Wander-two.csproj", "{340D6B16-8DDE-48E4-8ECB-CCD5BB4FC5D8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{340D6B16-8DDE-48E4-8ECB-CCD5BB4FC5D8}.Debug|x64.ActiveCfg = Debug|x64
+		{340D6B16-8DDE-48E4-8ECB-CCD5BB4FC5D8}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {47DA0E6D-2810-491A-9A5E-371C635C13DE}
+	EndGlobalSection
+EndGlobal
