@@ -42,6 +42,8 @@ namespace IngameScript
         //
         // to learn more about ingame scripts.
 
+        IMyShipController Controller;
+
         public Program()
         {
             // The constructor, called only once every session and
@@ -54,6 +56,9 @@ namespace IngameScript
             // It's recommended to set Runtime.UpdateFrequency 
             // here, which will allow your script to run itself without a 
             // timer block.
+
+            Runtime.UpdateFrequency = UpdateFrequency.Update1;
+            UpdateReferences();
         }
 
         public void Save()
@@ -77,6 +82,14 @@ namespace IngameScript
             // 
             // The method itself is required, but the arguments above
             // can be removed if not needed.
+        }
+
+        public void UpdateReferences()
+        {
+            // Find the Controller block to use
+            var allControllerBlocks = new List<IMyShipController>();
+            GridTerminalSystem.GetBlocksOfType<IMyShipController>(allControllerBlocks);
+
         }
     }
 }
