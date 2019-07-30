@@ -23,15 +23,7 @@ namespace IngameScript
 	{
 		public class ChassisModel
 		{
-			// Plan:
-			// * Create a box to represent the wheel locations and a box to represent the upper body location.
-			// * Create sphere colliders (on the fly) at opposing wheels to determine the corner positions.
-			// * Orient the box based on this, then stack the chassis on top.
-			//
-			//	1. Don't worry about the stacked box. Just use the wheel base.
-			//	2. Once the wheel base can reliably traverse terrain, start worrying about the stacked box.
 
-			List<>
 		}
 	}
 }

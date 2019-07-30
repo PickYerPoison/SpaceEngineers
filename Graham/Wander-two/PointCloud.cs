@@ -27,8 +27,8 @@ namespace IngameScript
 			public const int TIMEOUT_TERRAIN = 100000;
 			const int MAXIMUM_DEPTH = 20;
 			const int MINIMUM_POINTS = 1;
-			int currentTime;
-			OcTree ocTree;
+			int currentTime_;
+			OcTree ocTree_;
 
 			public interface Collider
 			{
@@ -40,41 +40,44 @@ namespace IngameScript
 				/// <summary>
 				/// A heuristic value for the farthest a point could be and still possibly be inside the collider.
 				/// </summary>
-				double GetMaximumPossibleExtent();
+				double MaxExtent { get; }
 
 				Vector3D Position { get; set; }
 			}
 
 			public class SphereCollider : Collider
 			{
-				Vector3D center;
-				double radius;
+				Vector3D center_;
+				double radius_;
 
 				public SphereCollider(Vector3D center, double radius)
 				{
-					this.center = center;
-					this.radius = radius;
+					center_ = center;
+					radius_ = radius;
 				}
 
 				public bool Contains(Vector3D point)
 				{
-					return (Vector3D.Distance(center, point) <= radius);
+					return (Vector3D.Distance(center_, point) <= radius_);
 				}
 
-				public double GetMaximumPossibleExtent()
-				{
-					return radius;
-				}
-
-				public override Vector3D Position
+				public double MaxExtent
 				{
 					get
 					{
-						return center;
+						return radius_;
+					}
+				}
+
+				public Vector3D Position
+				{
+					get
+					{
+						return center_;
 					}
 					set
 					{
-						center = value;
+						center_ = value;
 					}
 				}
 
@@ -82,36 +85,36 @@ namespace IngameScript
 				{
 					get
 					{
-						return radius;
+						return radius_;
 					}
 					set
 					{
-						radius = value;
+						radius_ = value;
 					}
 				}
 			}
 
 			public class BoxCollider : Collider
 			{
-				Vector3D center;
-				Vector3D extents;
-				MatrixD rotation;
-				double maxDistance;
+				Vector3D center_;
+				Vector3D extents_;
+				MatrixD rotation_;
+				double maxDistance_;
 
 				public BoxCollider(Vector3D center, Vector3D extents, MatrixD rotation)
 				{
-					this.center = center;
-					this.extents = extents;
-					this.rotation = rotation;
-					maxDistance = Vector3D.Distance(center, center + extents);
+					center_ = center;
+					extents_ = extents;
+					rotation_ = rotation;
+					maxDistance_ = Vector3D.Distance(center, center + extents);
 				}
 
 				public BoxCollider(Vector3D center, Vector3D extents, Vector3D rotation)
 				{
-					this.center = center;
-					this.extents = extents;
-					this.rotation = MatrixD.CreateFromYawPitchRoll(rotation.X, rotation.Y, rotation.Z);
-					maxDistance = Vector3D.Distance(center, center + extents);
+					center_ = center;
+					extents_ = extents;
+					rotation_ = MatrixD.CreateFromYawPitchRoll(rotation.X, rotation.Y, rotation.Z);
+					maxDistance_ = Vector3D.Distance(center, center + extents);
 				}
 
 				public bool Contains(Vector3D point)
@@ -119,31 +122,34 @@ namespace IngameScript
 					// The point needs to be aligned to the rotation of the box.
 
 					// Begin with creating a local vector that starts from box's center and ends at the point.
-					Vector3D localPoint = center - point;
+					Vector3D localPoint = center_ - point;
 
 					// Next, rotate it OPPOSITE the box's rotation (this is the same as rotating the box towards it).
-					localPoint = Vector3D.Rotate(localPoint, MatrixD.Invert(rotation));
+					localPoint = Vector3D.Rotate(localPoint, MatrixD.Invert(rotation_));
 
 					// Finally, determine if the (now locally aligned) point is within the extents.
-					return (localPoint.X >= -extents.X && localPoint.X < extents.X &&
-							localPoint.Y >= -extents.Y && localPoint.Y < extents.Y &&
-							localPoint.Z >= -extents.Z && localPoint.Z < extents.Z);
+					return (localPoint.X >= -extents_.X && localPoint.X < extents_.X &&
+							localPoint.Y >= -extents_.Y && localPoint.Y < extents_.Y &&
+							localPoint.Z >= -extents_.Z && localPoint.Z < extents_.Z);
 				}
 
-				public double GetMaximumPossibleExtent()
+				public double MaxExtent
 				{
-					return maxDistance;
+					get
+					{
+						return maxDistance_;
+					}
 				}
 
 				public Vector3D Position
 				{
 					get
 					{
-						return center;
+						return center_;
 					}
 					set
 					{
-						center = value;
+						center_ = value;
 					}
 				}
 
@@ -151,12 +157,12 @@ namespace IngameScript
 				{
 					get
 					{
-						return extents;
+						return extents_;
 					}
 					set
 					{
-						extents = value;
-						maxDistance = extents.Length();
+						extents_ = value;
+						maxDistance_ = extents_.Length();
 					}
 				}
 
@@ -164,63 +170,73 @@ namespace IngameScript
 				{
 					get
 					{
-						return rotation;
+						return rotation_;
 					}
 					set
 					{
-						rotation = value;
+						rotation_ = value;
 					}
 				}
 			}
 
 			public struct Point
 			{
-				public Vector3D Position;
-				public int timeout;
+				Vector3D position_;
+				int timeout_;
 
-				public Point(Vector3D position, int invalidAfter)
+				public Point(Vector3D position, int timeout)
 				{
-					Position = position;
-					timeout = invalidAfter;
+					position_ = position;
+					timeout_ = timeout;
 				}
 
-				public Point(Point p)
+				public Vector3D Position
 				{
-					Position = p.Position;
-					timeout = p.timeout;
+					get
+					{
+						return position_;
+					}
+				}
+
+				public int Timeout
+				{
+					get
+					{
+						return timeout_;
+					}
 				}
 			}
 
 			class OcTree
 			{
-				Vector3D center;
-				Vector3D extents;
-				List<OcTree> children;
-				List<Point> points;
-				int depth;
-				bool occupied;
+				Vector3D center_;
+				Vector3D extents_;
+				List<OcTree> children_;
+				List<Point> points_;
+				int depth_;
+				bool occupied_;
 
 				public OcTree(Vector3D newCenter, Vector3D newExtents, int newDepth)
 				{
-					center = newCenter;
-					extents = newExtents;
-					children = new List<OcTree>();
-					points = new List<Point>();
-					depth = newDepth;
-					occupied = false;
+					center_ = newCenter;
+					extents_ = newExtents;
+					children_ = new List<OcTree>();
+					points_ = new List<Point>();
+					depth_ = newDepth;
+					occupied_ = false;
 				}
 
 				public bool Contains(Vector3D point)
 				{
-					return (point.X >= center.X - extents.X && point.X < center.X + extents.X &&
-							point.Y >= center.Y - extents.Y && point.Y < center.Y + extents.Y &&
-							point.Z >= center.Z - extents.Z && point.Z < center.Z + extents.Z);
+					return (point.X >= center_.X - extents_.X && point.X < center_.X + extents_.X &&
+							point.Y >= center_.Y - extents_.Y && point.Y < center_.Y + extents_.Y &&
+							point.Z >= center_.Z - extents_.Z && point.Z < center_.Z + extents_.Z);
 				}
 
 				public bool GetOccupied()
 				{
-					bool occupied = points.Count() > 0;
-					foreach (var child in children)
+					bool occupied = points_.Count() > 0;
+					foreach (var child in children_)
 					{
 						if (child.GetOccupied())
 						{
@@ -234,16 +250,16 @@ namespace IngameScript
 				public void AddPoint(Vector3D point, int timeout)
 				{
 					// Add point to children if present
-					if (children.Count() > 0)
+					if (children_.Count() > 0)
 					{
 						GetContainingChild(point).AddPoint(point, timeout);
 					}
 					else
 					{
-						occupied = true;
-						points.Add(new Point(point, timeout));
+						occupied_ = true;
+						points_.Add(new Point(point, timeout));
 						// Subdivide if reached minimum points (and not maximum depth)
-						if (points.Count() > MINIMUM_POINTS && depth < MAXIMUM_DEPTH)
+						if (points_.Count() > MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH)
 						{
 							Subdivide();
 						}
@@ -254,11 +270,11 @@ namespace IngameScript
 				{
 					// Remove any points that have timed out
 					int i = 0;
-					while (i < points.Count())
+					while (i < points_.Count())
 					{
-						if (points[i].timeout >= currentTime)
+						if (points_[i].Timeout >= currentTime)
 						{
-							points.RemoveAt(i);
+							points_.RemoveAt(i);
 						}
 						else
 						{
@@ -266,11 +282,11 @@ namespace IngameScript
 						}
 					}
 
-					if (points.Count() > 0)
+					if (points_.Count() > 0)
 					{
 						// Undo subdivision if all children are empty
 						bool allChildrenEmpty = true;
-						foreach (var child in children)
+						foreach (var child in children_)
 						{
 							child.Update(currentTime);
 							if (allChildrenEmpty && child.GetOccupied())
@@ -281,7 +297,7 @@ namespace IngameScript
 
 						if (allChildrenEmpty)
 						{
-							children.Clear();
+							children_.Clear();
 						}
 					}
 				}
@@ -289,13 +305,13 @@ namespace IngameScript
 				public void GetPossibleCollisions(ref List<Vector3D> possibleCollisions, Collider collider)
 				{
 					// Automatically disqualify this quadrant if no points in it could be contained by the collider.
-					if (Vector3D.Distance(center, collider.Position) <= extents.Length() + collider.GetMaximumPossibleExtent())
+					if (Vector3D.Distance(center_, collider.Position) <= extents_.Length() + collider.MaxExtent)
 					{
-						if (children.Count() == 0)
+						if (children_.Count() == 0)
 						{
-							foreach (var point in points)
+							foreach (var point in points_)
 							{
-								if (Vector3D.Distance(collider.Position, point.Position) <= collider.GetMaximumPossibleExtent())
+								if (Vector3D.Distance(collider.Position, point.Position) <= collider.MaxExtent)
 								{
 									possibleCollisions.Add(point.Position);
 								}
@@ -303,7 +319,7 @@ namespace IngameScript
 						}
 						else
 						{
-							foreach (var child in children)
+							foreach (var child in children_)
 							{
 								GetPossibleCollisions(ref possibleCollisions, collider);
 							}
@@ -316,88 +332,88 @@ namespace IngameScript
 					// Create new children
 					for (int i = 0; i < 8; i++)
 					{
-						Vector3D newCenter = new Vector3D(center);
+						Vector3D newCenter = new Vector3D(center_);
 						switch (i)
 						{
-							case 0: newCenter.X += extents.X / 2;
-								newCenter.Y += extents.Y / 2;
-								newCenter.Z += extents.Z / 2;
+							case 0: newCenter.X += extents_.X / 2;
+								newCenter.Y += extents_.Y / 2;
+								newCenter.Z += extents_.Z / 2;
 								break;
 							case 1:
-								newCenter.X += extents.X / 2;
-								newCenter.Y += extents.Y / 2;
-								newCenter.Z -= extents.Z / 2;
+								newCenter.X += extents_.X / 2;
+								newCenter.Y += extents_.Y / 2;
+								newCenter.Z -= extents_.Z / 2;
 								break;
 							case 2:
-								newCenter.X += extents.X / 2;
-								newCenter.Y -= extents.Y / 2;
-								newCenter.Z += extents.Z / 2;
+								newCenter.X += extents_.X / 2;
+								newCenter.Y -= extents_.Y / 2;
+								newCenter.Z += extents_.Z / 2;
 								break;
 							case 3:
-								newCenter.X += extents.X / 2;
-								newCenter.Y -= extents.Y / 2;
-								newCenter.Z -= extents.Z / 2;
+								newCenter.X += extents_.X / 2;
+								newCenter.Y -= extents_.Y / 2;
+								newCenter.Z -= extents_.Z / 2;
 								break;
 							case 4:
-								newCenter.X -= extents.X / 2;
-								newCenter.Y += extents.Y / 2;
-								newCenter.Z += extents.Z / 2;
+								newCenter.X -= extents_.X / 2;
+								newCenter.Y += extents_.Y / 2;
+								newCenter.Z += extents_.Z / 2;
 								break;
 							case 5:
-								newCenter.X -= extents.X / 2;
-								newCenter.Y += extents.Y / 2;
-								newCenter.Z -= extents.Z / 2;
+								newCenter.X -= extents_.X / 2;
+								newCenter.Y += extents_.Y / 2;
+								newCenter.Z -= extents_.Z / 2;
 								break;
 							case 6:
-								newCenter.X -= extents.X / 2;
-								newCenter.Y -= extents.Y / 2;
-								newCenter.Z += extents.Z / 2;
+								newCenter.X -= extents_.X / 2;
+								newCenter.Y -= extents_.Y / 2;
+								newCenter.Z += extents_.Z / 2;
 								break;
 							case 7:
-								newCenter.X -= extents.X / 2;
-								newCenter.Y -= extents.Y / 2;
-								newCenter.Z -= extents.Z / 2;
+								newCenter.X -= extents_.X / 2;
+								newCenter.Y -= extents_.Y / 2;
+								newCenter.Z -= extents_.Z / 2;
 								break;
 						}
 
-						children.Add(new OcTree(newCenter, extents / 2, depth + 1));
+						children_.Add(new OcTree(newCenter, extents_ / 2, depth_ + 1));
 					}
 
 					// Distribute points
-					foreach (var point in points)
+					foreach (var point in points_)
 					{
-						foreach (var child in children)
+						foreach (var child in children_)
 						{
 							if (child.Contains(point.Position))
 							{
-								child.AddPoint(point.Position, point.timeout);
+								child.AddPoint(point.Position, point.Timeout);
 								break;
 							}
 						}
 					}
-					points.Clear();
+					points_.Clear();
 				}
 
 				OcTree GetContainingChild(Vector3D point)
 				{
-					if (children.Count() > 0)
+					if (children_.Count() > 0)
 					{
 						int childToAddTo = 0;
 
-						if (point.X < center.X)
+						if (point.X < center_.X)
 						{
 							childToAddTo += 4;
 						}
-						if (point.Y < center.Y)
+						if (point.Y < center_.Y)
 						{
 							childToAddTo += 2;
 						}
-						if (point.Z < center.Z)
+						if (point.Z < center_.Z)
 						{
 							childToAddTo += 1;
 						}
 
-						return children[childToAddTo];
+						return children_[childToAddTo];
 					}
 					else
 					{
@@ -408,17 +424,15 @@ namespace IngameScript
 
 			public PointCloud(Vector3D center, Vector3D extents)
 			{
-				ocTree = new OcTree(center, extents, 0);
-				currentTime = 0;
+				ocTree_ = new OcTree(center, extents, 0);
+				currentTime_ = 0;
 			}
 
 			public List<Vector3D> GetCollidingPoints(Collider collider)
 			{
-				ocTree.Update(currentTime);
-
 				var collidingPoints = new List<Vector3D>();
 
-				ocTree.GetPossibleCollisions(ref collidingPoints, collider);
+				ocTree_.GetPossibleCollisions(ref collidingPoints, collider);
 
 				// Cut list down to actual collisions.
 				int i = 0;
@@ -437,12 +451,10 @@ namespace IngameScript
 				return collidingPoints;
 			}
 
-			/// <summary>
-			/// Call this once per tick to make sure points timeout when they should!
-			/// </summary>
-			public void UpdateTick()
+			public void UpdateTick(int ticksSinceLastUpdate)
 			{
-				currentTime++;
+				currentTime_ += ticksSinceLastUpdate;
+				ocTree_.Update(currentTime_);
 			}
 		}
 	}

@@ -23,14 +23,22 @@ namespace IngameScript
 	{
 		public class CameraCluster
 		{
-			Random random;
+			/// <summary>
+			/// Magic constant for how much scan distance is gained per tick. Derived from testing.
+			/// </summary>
+			const double CHARGE_PER_TICK = 1;
 
+			Random randomGenerator_;
 			List<IMyCameraBlock> cameraList_;
+			MyDetectedEntityInfo lastScanHit_;
+			double raycastConeLimit_;
 
 			public CameraCluster()
 			{
 				cameraList_ = new List<IMyCameraBlock>();
-				random = new Random();
+				randomGenerator_ = new Random();
+				raycastConeLimit_ = 45;     // 45 is the server default
+				lastScanHit_ = default(MyDetectedEntityInfo);
 			}
 
 			/// <summary>
@@ -46,33 +54,66 @@ namespace IngameScript
 			}
 
 			/// <summary>
-			/// Scans a random point within each camera's range at a distance.
+			/// Scans a random point within a random camera's cone at a distance.
 			/// </summary>
-			/// <param name="distance">The distance to scan at. If 0, scans at the highest range the camera can.</param>
-			/// <returns>A list of encountered entities.</returns>
-			public List<MyDetectedEntityInfo> ScanRandom(double distance = 0)
+			/// <param name="distance">The distance to scan at.</param>
+			/// <returns>Whether there was a hit</returns>
+			public bool ScanRandom(double distance)
 			{
-				var detectedEntities = new List<MyDetectedEntityInfo>();
-
 				foreach (var camera in cameraList_)
 				{
-					var individualCameraDistance = distance;
-					if (distance <= 0)
+					if (camera.CanScan(distance))
 					{
-						individualCameraDistance = camera.RaycastDistanceLimit;
-					}
-					float randomPitch = (float)(random.NextDouble() * camera.RaycastConeLimit * 2 - camera.RaycastConeLimit);
-					float randomYaw = (float)(random.NextDouble() * camera.RaycastConeLimit * 2 - camera.RaycastConeLimit);
+						float randomPitch = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
+						float randomYaw = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
 
-					var hitData = camera.Raycast(individualCameraDistance, randomPitch, randomYaw);
+						lastScanHit_ = camera.Raycast(distance, randomPitch, randomYaw);
 
-					if (!hitData.IsEmpty())
-					{
-						detectedEntities.Add(hitData);
+						return (!lastScanHit_.IsEmpty());
 					}
 				}
+				return false;
+			}
 
-				return detectedEntities;
+			/// <summary>
+			/// Calculates how many ticks to wait before requesting a scan to ensure at least one camera is ready.
+			/// </summary>
+			public int GetDelay(double distance)
+			{
+				if (cameraList_.Count() > 0)
+				{
+					return (int)(Math.Round(((distance / CHARGE_PER_TICK) / cameraList_.Count()), MidpointRounding.AwayFromZero));
+				}
+				else
+				{
+					return 0;
+				}
+			}
+
+			/// <summary>
+			/// The maximum positive angle the camera can apply to pitch and yaw for raycasting.
+			/// </summary>
+			public double RaycastConeLimit
+			{
+				get
+				{
+					return raycastConeLimit_;
+				}
+				set
+				{
+					if (value > 45)
+					{
+						raycastConeLimit_ = 45;
+					}
+					else if (value < 0)
+					{
+						raycastConeLimit_ = 0;
+					}
+					else
+					{
+						raycastConeLimit_ = value;
+					}
+				}
 			}
 		}
 	}
