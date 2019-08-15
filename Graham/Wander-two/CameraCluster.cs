@@ -75,14 +75,19 @@ namespace IngameScript
 				return false;
 			}
 
+			public MyDetectedEntityInfo GetScanInfo()
+			{
+				return lastScanHit_;
+			}
+
 			/// <summary>
 			/// Calculates how many ticks to wait before requesting a scan to ensure at least one camera is ready.
 			/// </summary>
-			public int GetDelay(double distance)
+			public double GetDelay(double distance)
 			{
 				if (cameraList_.Count() > 0)
 				{
-					return (int)(Math.Round(((distance / CHARGE_PER_TICK) / cameraList_.Count()), MidpointRounding.AwayFromZero));
+					return (distance / CHARGE_PER_TICK) / cameraList_.Count();
 				}
 				else
 				{

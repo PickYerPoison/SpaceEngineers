@@ -21,14 +21,14 @@ namespace IngameScript
 {
 	partial class Program
 	{
-		public class PointCloud
+		public class TerrainMap
 		{
-			public const int TIMEOUT_MOVING = 1000;
-			public const int TIMEOUT_TERRAIN = 100000;
-			const int MAXIMUM_DEPTH = 20;
-			const int MINIMUM_POINTS = 1;
+			const int MAXIMUM_DEPTH = 10;
+			const int MINIMUM_POINTS = 2;
 			int currentTime_;
-			OcTree ocTree_;
+			OcTree pointCloud_;
+			Collider edgeDetectionCollider_;
+			Vector3D upDirection_;
 
 			public interface Collider
 			{
@@ -45,7 +45,7 @@ namespace IngameScript
 				Vector3D Position { get; set; }
 			}
 
-			public class SphereCollider : Collider
+			/*public class SphereCollider : Collider
 			{
 				Vector3D center_;
 				double radius_;
@@ -92,9 +92,9 @@ namespace IngameScript
 						radius_ = value;
 					}
 				}
-			}
+			}*/
 
-			public class BoxCollider : Collider
+			/*public class BoxCollider : Collider
 			{
 				Vector3D center_;
 				Vector3D extents_;
@@ -177,14 +177,77 @@ namespace IngameScript
 						rotation_ = value;
 					}
 				}
+			}*/
+
+			public class HollowSphereCollider : Collider
+			{
+				Vector3D center_;
+				double innerRadius_;
+				double outerRadius_;
+
+				public HollowSphereCollider(Vector3D center, double innerRadius, double outerRadius)
+				{
+					center_ = center;
+					innerRadius_ = innerRadius;
+					outerRadius_ = outerRadius;
+				}
+
+				public bool Contains(Vector3D point)
+				{
+					double distance = Vector3D.Distance(center_, point);
+					return (innerRadius_ < distance && distance < outerRadius_);
+				}
+
+				public double MaxExtent
+				{
+					get
+					{
+						return outerRadius_;
+					}
+				}
+
+				public Vector3D Position
+				{
+					get
+					{
+						return center_;
+					}
+					set
+					{
+						center_ = value;
+					}
+				}
+
+				public double InnerRadius
+				{
+					get
+					{
+						return innerRadius_;
+					}
+					set
+					{
+						innerRadius_ = value;
+					}
+				}
+				public double OuterRadius
+				{
+					get
+					{
+						return outerRadius_;
+					}
+					set
+					{
+						outerRadius_ = value;
+					}
+				}
 			}
 
-			public struct Point
+			public class Point3D
 			{
 				Vector3D position_;
 				int timeout_;
 
-				public Point(Vector3D position, int timeout)
+				public Point3D(Vector3D position, int timeout)
 				{
 					position_ = position;
 					timeout_ = timeout;
@@ -212,18 +275,16 @@ namespace IngameScript
 				Vector3D center_;
 				Vector3D extents_;
 				List<OcTree> children_;
-				List<Point> points_;
+				List<Point3D> points_;
 				int depth_;
-				bool occupied_;
 
 				public OcTree(Vector3D newCenter, Vector3D newExtents, int newDepth)
 				{
 					center_ = newCenter;
 					extents_ = newExtents;
 					children_ = new List<OcTree>();
-					points_ = new List<Point>();
+					points_ = new List<Point3D>();
 					depth_ = newDepth;
-					occupied_ = false;
 				}
 
 				public bool Contains(Vector3D point)
@@ -235,31 +296,21 @@ namespace IngameScript
 
 				public bool GetOccupied()
 				{
-					bool occupied = points_.Count() > 0;
-					foreach (var child in children_)
-					{
-						if (child.GetOccupied())
-						{
-							occupied = true;
-							break;
-						}
-					}
-					return occupied;
+					return (points_.Count() > 0 || children_.Count() > 0);
 				}
 
-				public void AddPoint(Vector3D point, int timeout)
+				public void AddPoint(Point3D point)
 				{
 					// Add point to children if present
 					if (children_.Count() > 0)
 					{
-						GetContainingChild(point).AddPoint(point, timeout);
+						GetContainingChild(point.Position).AddPoint(point);
 					}
 					else
 					{
-						occupied_ = true;
-						points_.Add(new Point(point, timeout));
+						points_.Add(point);
 						// Subdivide if reached minimum points (and not maximum depth)
-						if (points_.Count() > MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH)
+						if (points_.Count() >= MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH)
 						{
 							Subdivide();
 						}
@@ -302,7 +353,7 @@ namespace IngameScript
 					}
 				}
 
-				public void GetPossibleCollisions(ref List<Vector3D> possibleCollisions, Collider collider)
+				public void GetCollisions(ref List<Point3D> collisions, Collider collider)
 				{
 					// Automatically disqualify this quadrant if no points in it could be contained by the collider.
 					if (Vector3D.Distance(center_, collider.Position) <= extents_.Length() + collider.MaxExtent)
@@ -311,9 +362,9 @@ namespace IngameScript
 						{
 							foreach (var point in points_)
 							{
-								if (Vector3D.Distance(collider.Position, point.Position) <= collider.MaxExtent)
+								if (collider.Contains(point.Position))
 								{
-									possibleCollisions.Add(point.Position);
+									collisions.Add(point);
 								}
 							}
 						}
@@ -321,7 +372,7 @@ namespace IngameScript
 						{
 							foreach (var child in children_)
 							{
-								GetPossibleCollisions(ref possibleCollisions, collider);
+								child.GetCollisions(ref collisions, collider);
 							}
 						}
 					}
@@ -386,7 +437,7 @@ namespace IngameScript
 						{
 							if (child.Contains(point.Position))
 							{
-								child.AddPoint(point.Position, point.Timeout);
+								child.AddPoint(point);
 								break;
 							}
 						}
@@ -413,48 +464,105 @@ namespace IngameScript
 							childToAddTo += 1;
 						}
 
-						return children_[childToAddTo];
+						return children_[childToAddTo].GetContainingChild(point);
 					}
 					else
 					{
 						return this;
 					}
 				}
-			}
 
-			public PointCloud(Vector3D center, Vector3D extents)
-			{
-				ocTree_ = new OcTree(center, extents, 0);
-				currentTime_ = 0;
-			}
-
-			public List<Vector3D> GetCollidingPoints(Collider collider)
-			{
-				var collidingPoints = new List<Vector3D>();
-
-				ocTree_.GetPossibleCollisions(ref collidingPoints, collider);
-
-				// Cut list down to actual collisions.
-				int i = 0;
-				while (i < collidingPoints.Count())
+				public void GetPoints(ref List<Vector3D> points)
 				{
-					if (!collider.Contains(collidingPoints[i]))
+					foreach (var child in children_)
 					{
-						collidingPoints.RemoveAt(i);
+						child.GetPoints(ref points);
 					}
-					else
+
+					foreach (var point in points_)
 					{
-						i++;
+						points.Add(point.Position);
 					}
 				}
 
-				return collidingPoints;
+				public Vector3D Center
+				{
+					get
+					{
+						return center_;
+					}
+				}
+			}
+			
+			public TerrainMap(Vector3D center, Vector3D extents)
+			{
+				pointCloud_ = new OcTree(center, extents, 0);
+				edgeDetectionCollider_ = new HollowSphereCollider(center, 0, 20);
+				currentTime_ = 0;
+				upDirection_ = new Vector3D(0, 0, 0);
+			}
+
+			/// <summary>
+			/// Adds a point. Returns a list of Point3Ds that are part of dangerous bumps as a result.
+			/// </summary>
+			public List<Point3D> AddPoint(Vector3D point, int timeout)
+			{
+				// Center the edge detection collider on the new point
+				edgeDetectionCollider_.Position = point;
+
+				// Find possible dangerous edges
+				var candidatePoints = new List<Point3D>();
+				pointCloud_.GetCollisions(ref candidatePoints, edgeDetectionCollider_);
+
+				// Decide whether each point pairing is a dangerous edge
+				var dangerousPoints = new List<Point3D>();
+				bool pointIsDangerous = false;
+				foreach (var point2 in candidatePoints)
+				{
+					if (IsEdgeDangerous(point, point2.Position))
+					{
+						dangerousPoints.Add(point2);
+						pointIsDangerous = true;
+					}
+				}
+
+				var newPoint = new Point3D(point, timeout);
+				pointCloud_.AddPoint(newPoint);
+				if (pointIsDangerous)
+				{
+					dangerousPoints.Add(newPoint);
+				}
+
+				return dangerousPoints;
+			}
+
+			/// <summary>
+			/// Returns true if a line drawn between two points is estimated to be dangerous.
+			/// </summary>
+			bool IsEdgeDangerous(Vector3D p1, Vector3D p2)
+			{
+				var dot = VRageMath.Vector3D.Dot(upDirection_, Vector3D.Normalize(p2 - p1));
+				var angle = (90 - Math.Acos(dot) * 180 / Math.PI);
+
+				return angle > 50 || angle < -50;
+			}
+
+			public void SetUpDirection(Vector3D upDirection)
+			{
+				upDirection_ = upDirection;
 			}
 
 			public void UpdateTick(int ticksSinceLastUpdate)
 			{
 				currentTime_ += ticksSinceLastUpdate;
-				ocTree_.Update(currentTime_);
+				pointCloud_.Update(currentTime_);
+			}
+
+			public List<Vector3D> GetPoints()
+			{
+				var points = new List<Vector3D>();
+				pointCloud_.GetPoints(ref points);
+				return points;
 			}
 		}
 	}
