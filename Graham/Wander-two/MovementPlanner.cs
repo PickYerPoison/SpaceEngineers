@@ -39,9 +39,9 @@ namespace IngameScript
 			const int MAXIMUM_THINKAHEAD = 5;
 
 			/// <summary>
-			/// Closer than this to a point is considered a collision.
+			/// Distance between each node.
 			/// </summary>
-			const double COLLISION_DISTANCE = 10;
+			const double NODE_DISTANCE = 10;
 
 			const int MAXIMUM_DEPTH = 10;
 			const int MINIMUM_POINTS = 1;
@@ -281,7 +281,8 @@ namespace IngameScript
 
 				public void CreateChildNodes()
 				{
-					return;
+					// Create extremes
+
 				}
 
 				public void MarkForDeletion()
