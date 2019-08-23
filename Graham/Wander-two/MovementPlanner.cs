@@ -247,8 +247,10 @@ namespace IngameScript
 			public class MovementNode
 			{
 				Vector2D position_;
-				double rotation_;
+				double facingAngle_;
 				double desiredSpeed_;
+
+				Vector2D goal_;
 
 				/// <summary>
 				/// Distance to the goal from this node. Heuristic value.
@@ -266,23 +268,50 @@ namespace IngameScript
 
 				bool markedForDeletion_;
 
-				public MovementNode(Vector2D position, double facing, double desiredSpeed, double distanceToGoal, int depth)
+				public MovementNode(Vector2D position, double facingAngle, double desiredSpeed, Vector2D goal, int depth)
 				{
 					position_ = position;
-					rotation_ = facing;
+					facingAngle_ = facingAngle;
 					desiredSpeed_ = desiredSpeed;
-					distanceToGoal_ = distanceToGoal;
-					bestBranchDistanceToGoal_ = distanceToGoal;
+					goal_ = goal;
+					distanceToGoal_ = Vector2D.Distance(position_, goal_);
+					bestBranchDistanceToGoal_ = distanceToGoal_;
 					depth_ = depth;
 
 					children_ = new List<MovementNode>();
 					markedForDeletion_ = false;
 				}
 
-				public void CreateChildNodes()
+				public void CreateChildNodes(QuadTree tree)
 				{
 					// Create extremes
+					CreateChildNode(tree, facingAngle_);
+					CreateChildNode(tree, facingAngle_ + MAXIMUM_TURN_DEGREES);
+					CreateChildNode(tree, facingAngle_ - MAXIMUM_TURN_DEGREES);
 
+					// Create additional angles
+					if (EXTRA_TURN_ANGLES > 0)
+					{
+						double increment = MAXIMUM_TURN_DEGREES / EXTRA_TURN_ANGLES;
+						for (int i = 1; i <= EXTRA_TURN_ANGLES; i++)
+						{
+							CreateChildNode(tree, facingAngle_ + increment * i);
+							CreateChildNode(tree, facingAngle_ - increment * i);
+						}
+					}
+
+				}
+
+				void CreateChildNode(QuadTree tree, double angle)
+				{
+					var newPosition = new Vector2D(Math.Cos(angle) * NODE_DISTANCE, Math.Sin(angle) * NODE_DISTANCE);
+
+					var newNode = new MovementNode(newPosition, angle, desiredSpeed_, goal_, depth_ + 1);
+
+					if (tree.AddNode(newNode))
+					{
+						children_.Add(newNode);
+					}
 				}
 
 				public void MarkForDeletion()
@@ -290,8 +319,13 @@ namespace IngameScript
 					markedForDeletion_ = true;
 				}
 
+				/// <summary>
+				/// Updates the heuristic values of this node and nodes that branch from it.
+				/// </summary>
 				public void UpdateHeuristicValue()
 				{
+					bool hadChildren = children_.Count() > 0;
+
 					// Remove all children that are marked for deletion.
 					children_.RemoveAll(delegate (MovementNode node) { return node.markedForDeletion_; });
 
@@ -311,6 +345,11 @@ namespace IngameScript
 
 						// Update for best branch distance.
 						bestBranchDistanceToGoal_ = children_.First().bestBranchDistanceToGoal_;
+					}
+					else if (hadChildren)
+					{
+						// If all the children of this node have been removed, this is a dead path.
+						MarkForDeletion();
 					}
 					else
 					{
@@ -334,11 +373,11 @@ namespace IngameScript
 				{
 					get
 					{
-						return rotation_;
+						return facingAngle_;
 					}
 					set
 					{
-						rotation_ = value;
+						facingAngle_ = value;
 					}
 				}
 
@@ -353,9 +392,32 @@ namespace IngameScript
 						desiredSpeed_ = value;
 					}
 				}
+
+				/// <summary>
+				/// Returns the leaf node with the best heuristic value.
+				/// </summary>
+				public MovementNode GetBestNode()
+				{
+					if (children_.Count() == 0)
+					{
+						return this;
+					}
+					else
+					{
+						return children_.First();
+					}
+				}
+
+				/// <summary>
+				/// Returns the list of child nodes. This is mainly for debug purposes.
+				/// </summary>
+				public List<MovementNode> GetChildren()
+				{
+					return children_;
+				}
 			}
 
-			class QuadTree
+			public class QuadTree
 			{
 				Vector2D center_;
 				Vector2D extents_;
@@ -363,7 +425,7 @@ namespace IngameScript
 				List<Point2D> points_;
 				List<MovementNode> nodes_;
 				int depth_;
-				RectangleCollider invalidNodeDetectionCollider_;
+				Collider invalidNodeDetectionCollider_;
 
 				public QuadTree(Vector2D center, Vector2D extents, int depth)
 				{
@@ -373,6 +435,8 @@ namespace IngameScript
 					points_ = new List<Point2D>();
 					nodes_ = new List<MovementNode>();
 					depth_ = depth;
+
+					invalidNodeDetectionCollider_ = new RectangleCollider(new Vector2D(0, 0), new Vector2D(0, 0), 0);
 				}
 
 				public bool Contains(Vector2D point)
@@ -636,7 +700,7 @@ namespace IngameScript
 					}
 				}
 
-				public RectangleCollider InvalidNodeDetectionCollider
+				public Collider InvalidNodeDetectionCollider
 				{
 					get
 					{
@@ -671,6 +735,11 @@ namespace IngameScript
 				points_.GetPoints(ref points);
 
 				return points;
+			}
+
+			public void SetInvalidNodeDetectionCollider(Collider collider)
+			{
+				points_.InvalidNodeDetectionCollider = collider;
 			}
 		}
 	}
