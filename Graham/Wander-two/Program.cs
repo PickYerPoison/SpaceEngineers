@@ -101,10 +101,10 @@ namespace IngameScript
 			if (argument == "dump")
 			{
 				string dumpText = "";
-				for (int i = 0; i < 500; i++)
+				for (int i = 0; i < 1000; i++)
 				{
 					var point = points.First();
-					dumpText += "pointsToAdd.Add(new VRageMath.Vector3D(" + point.X.ToString() + ", " + point.Y.ToString() + ", " + point.Z.ToString() + "));\n";
+					dumpText += "a(" + Math.Round(point.X, 2).ToString() + "," + Math.Round(point.Y, 2).ToString() + "," + Math.Round(point.Z, 2).ToString() + ");\n";
 					points.RemoveAt(0);
 				}
 				Me.CustomData = dumpText;
