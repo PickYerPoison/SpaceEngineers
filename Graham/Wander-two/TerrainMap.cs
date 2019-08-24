@@ -23,8 +23,8 @@ namespace IngameScript
 	{
 		public class TerrainMap
 		{
-			const int MAXIMUM_DEPTH = 10;
-			const int MINIMUM_POINTS = 2;
+			const int MAXIMUM_DEPTH = 8;
+			const int MINIMUM_POINTS = 1;
 			int currentTime_;
 			OcTree pointCloud_;
 			Collider edgeDetectionCollider_;
@@ -45,7 +45,7 @@ namespace IngameScript
 				Vector3D Position { get; set; }
 			}
 
-			/*public class SphereCollider : Collider
+			public class SphereCollider : Collider
 			{
 				Vector3D center_;
 				double radius_;
@@ -92,7 +92,7 @@ namespace IngameScript
 						radius_ = value;
 					}
 				}
-			}*/
+			}
 
 			/*public class BoxCollider : Collider
 			{
@@ -308,11 +308,14 @@ namespace IngameScript
 					}
 					else
 					{
-						points_.Add(point);
-						// Subdivide if reached minimum points (and not maximum depth)
-						if (points_.Count() >= MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH)
+						if (points_.Count() < MINIMUM_POINTS)
 						{
-							Subdivide();
+							points_.Add(point);
+							// Subdivide if reached minimum points (and not maximum depth)
+							if (points_.Count() >= MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH)
+							{
+								Subdivide();
+							}
 						}
 					}
 				}
@@ -562,6 +565,13 @@ namespace IngameScript
 			{
 				var points = new List<Vector3D>();
 				pointCloud_.GetPoints(ref points);
+				return points;
+			}
+
+			public List<Point3D> GetCollisions(Collider collider)
+			{
+				var points = new List<Point3D>();
+				pointCloud_.GetCollisions(ref points, collider);
 				return points;
 			}
 		}
