@@ -44,6 +44,7 @@ namespace IngameScript
 
 		CameraCluster cameras;
 		List<Vector3D> points;
+		bool recording;
 
         public Program()
         {
@@ -71,6 +72,8 @@ namespace IngameScript
 			}
 
 			points = new List<Vector3D>();
+
+			recording = false;
         }
 
         public void Save()
@@ -98,9 +101,11 @@ namespace IngameScript
 			if (argument == "dump")
 			{
 				string dumpText = "";
-				foreach (var point in points)
+				for (int i = 0; i < 500; i++)
 				{
-					dumpText += "pointsToAdd.Add(new VRageMath.Vector3D("+point.X.ToString()+", "+point.Y.ToString()+", "+point.Z.ToString()+"));\n";
+					var point = points.First();
+					dumpText += "pointsToAdd.Add(new VRageMath.Vector3D(" + point.X.ToString() + ", " + point.Y.ToString() + ", " + point.Z.ToString() + "));\n";
+					points.RemoveAt(0);
 				}
 				Me.CustomData = dumpText;
 			}
@@ -108,12 +113,25 @@ namespace IngameScript
 			{
 				points.Clear();
 			}
-
-			var newPoints = cameras.ScanRandomAll(500);
-
-			foreach (var point in newPoints)
+			else if (argument == "stop")
 			{
-				points.Add((Vector3D)point.HitPosition);
+				recording = false;
+			}
+			else if (argument == "start")
+			{
+				recording = true;
+			}
+
+			if (recording)
+			{
+				var newPoints = cameras.ScanRandomAll(30);
+
+				foreach (var point in newPoints)
+				{
+					points.Add((Vector3D)point.HitPosition);
+				}
+
+				Echo(points.Count().ToString());
 			}
         }
     }
