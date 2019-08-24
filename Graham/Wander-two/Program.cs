@@ -42,7 +42,8 @@ namespace IngameScript
         //
         // to learn more about ingame scripts.
 
-        IMyShipController Controller;
+		CameraCluster cameras;
+		List<Vector3D> points;
 
         public Program()
         {
@@ -58,7 +59,18 @@ namespace IngameScript
             // timer block.
 
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
-            UpdateReferences();
+
+			cameras = new CameraCluster();
+
+			var cameraList = new List<IMyCameraBlock>();
+			GridTerminalSystem.GetBlocksOfType<IMyCameraBlock>(cameraList);
+			
+			foreach (var camera in cameraList)
+			{
+				cameras.AddCamera(camera);
+			}
+
+			points = new List<Vector3D>();
         }
 
         public void Save()
@@ -73,23 +85,36 @@ namespace IngameScript
 
         public void Main(string argument, UpdateType updateSource)
         {
-            // The main entry point of the script, invoked every time
-            // one of the programmable block's Run actions are invoked,
-            // or the script updates itself. The updateSource argument
-            // describes where the update came from. Be aware that the
-            // updateSource is a  bitfield  and might contain more than 
-            // one update type.
-            // 
-            // The method itself is required, but the arguments above
-            // can be removed if not needed.
-        }
+			// The main entry point of the script, invoked every time
+			// one of the programmable block's Run actions are invoked,
+			// or the script updates itself. The updateSource argument
+			// describes where the update came from. Be aware that the
+			// updateSource is a  bitfield  and might contain more than 
+			// one update type.
+			// 
+			// The method itself is required, but the arguments above
+			// can be removed if not needed.
 
-        public void UpdateReferences()
-        {
-            // Find the Controller block to use
-            var allControllerBlocks = new List<IMyShipController>();
-            GridTerminalSystem.GetBlocksOfType<IMyShipController>(allControllerBlocks);
+			if (argument == "dump")
+			{
+				string dumpText = "";
+				foreach (var point in points)
+				{
+					dumpText += "pointsToAdd.Add(new VRageMath.Vector3D("+point.X.ToString()+", "+point.Y.ToString()+", "+point.Z.ToString()+"));\n";
+				}
+				Me.CustomData = dumpText;
+			}
+			else if (argument == "reset")
+			{
+				points.Clear();
+			}
 
+			var newPoints = cameras.ScanRandomAll(500);
+
+			foreach (var point in newPoints)
+			{
+				points.Add((Vector3D)point.HitPosition);
+			}
         }
     }
 }

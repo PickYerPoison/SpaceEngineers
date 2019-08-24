@@ -75,6 +75,29 @@ namespace IngameScript
 				return false;
 			}
 
+			public List<MyDetectedEntityInfo> ScanRandomAll(double distance)
+			{
+				var listToReturn = new List<MyDetectedEntityInfo>();
+
+				foreach (var camera in cameraList_)
+				{
+					if (camera.CanScan(distance))
+					{
+						float randomPitch = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
+						float randomYaw = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
+
+						lastScanHit_ = camera.Raycast(distance, randomPitch, randomYaw);
+
+						if (!lastScanHit_.IsEmpty())
+						{
+							listToReturn.Add(lastScanHit_);
+						}
+					}
+				}
+
+				return listToReturn;
+			}
+
 			public MyDetectedEntityInfo GetScanInfo()
 			{
 				return lastScanHit_;
@@ -87,11 +110,18 @@ namespace IngameScript
 			{
 				if (cameraList_.Count() > 0)
 				{
-					return (distance / CHARGE_PER_TICK) / cameraList_.Count();
+					if (cameraList_.First().RaycastDistanceLimit == -1)
+					{
+						return 0;
+					}
+					else
+					{
+						return (distance / CHARGE_PER_TICK) / cameraList_.Count();
+					}
 				}
 				else
 				{
-					return 0;
+					return -1;
 				}
 			}
 

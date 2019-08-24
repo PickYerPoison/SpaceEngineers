@@ -44,3 +44,5 @@ Graham/Wander-two/packages/HelixToolkit.Wpf.2.8.0/HelixToolkit.Wpf.2.8.0.nupkg
 Graham/Wander-two/packages/HelixToolkit.Wpf.2.8.0/CONTRIBUTORS
 Graham/Wander-two/PointCloudViewer/bin/Debug/HelixToolkit.Wpf.xml
 Graham/Wander-two/PointCloudViewer/bin/Debug/HelixToolkit.xml
+Graham/Wander-two/MDK/MDK.paths.props
+Graham/Wander-two/MDK/MDK.options.props
