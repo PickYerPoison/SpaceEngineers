@@ -695,13 +695,13 @@ namespace PointCloudViewer
 			pointsToAdd.Add(new VRageMath.Vector3D(-37463.354088959, -21730.1312963484, -43274.1274782762));
 			pointsToAdd.Add(new VRageMath.Vector3D(-37477.2217418521, -21703.8419553755, -43265.056311284));
 			pointsToAdd.Add(new VRageMath.Vector3D(-37480.330865082, -21709.6072065351, -43263.3386599168));
+			
+		   var pointOffset = new VRageMath.Vector3D(pointsToAdd.First().X, pointsToAdd.First().Y, pointsToAdd.First().Z);
 
-			double xCenter = pointsToAdd.First().X;
-			double yCenter = 0;
-			foreach (var )
-
-			foreach (var pointToAdd in pointsToAdd)
+			foreach (var referencedPointFromList in pointsToAdd)
 			{
+				var pointToAdd = referencedPointFromList - pointOffset;
+
 				var dangerousPoints = terrainMap.AddPoint(pointToAdd, 1);
 
 				var referencePoint = new VRageMath.Vector3D(pointToAdd);
@@ -711,7 +711,7 @@ namespace PointCloudViewer
 				foreach (var dangerousPoint in dangerousPoints)
 				{
 					// Add to visual display
-					var pointLine = new HelixToolkit.Wpf.LinesVisual3D();
+					/*var pointLine = new HelixToolkit.Wpf.LinesVisual3D();
 					pointLine.Points.Add(new Point3D(pointToAdd.X, pointToAdd.Z, pointToAdd.Y));
 					pointLine.Points.Add(new Point3D(dangerousPoint.Position.X, dangerousPoint.Position.Z, dangerousPoint.Position.Y));
 					Viewport3D.Children.Add(pointLine);
@@ -719,31 +719,9 @@ namespace PointCloudViewer
 					// Add to movement planner
 					referencePoint = new VRageMath.Vector3D(dangerousPoint.Position);
 					projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
-					movementPlanner.AddPoint(new VRageMath.Vector2D(projectedPoint.X, projectedPoint.Z), true, dangerousPoint.Timeout);
+					movementPlanner.AddPoint(new VRageMath.Vector2D(projectedPoint.X, projectedPoint.Z), true, dangerousPoint.Timeout);*/
 				}
 			}
-
-			/*terrainMap.AddPoint(new VRageMath.Vector3D(0, 5, 5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(0, 5, -5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(0, -5, 5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(0, -5, -5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, 0, 5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, 0, -5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(-5, 0, 5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(-5, 0, -5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, 5, 0), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, -5, 0), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(-5, 5, 0), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(-5, -5, 0), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, 5, 5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, 5, -5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, -5, 5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, 5, -5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(5, -5, -5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(-5, 5, 5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(-5, 5, -5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(-5, -5, 5), 100);
-			terrainMap.AddPoint(new VRageMath.Vector3D(-5, -5, -5), 100);*/
 
 			var points = terrainMap.GetPoints();
 
