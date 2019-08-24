@@ -23,7 +23,7 @@ namespace IngameScript
 	{
 		public class TerrainMap
 		{
-			const int MAXIMUM_DEPTH = 8;
+			const int MAXIMUM_DEPTH = 9;
 			const int MINIMUM_POINTS = 1;
 			int currentTime_;
 			OcTree pointCloud_;
@@ -500,9 +500,11 @@ namespace IngameScript
 			public TerrainMap(Vector3D center, Vector3D extents)
 			{
 				pointCloud_ = new OcTree(center, extents, 0);
-				edgeDetectionCollider_ = new HollowSphereCollider(center, 0, 20);
 				currentTime_ = 0;
 				upDirection_ = new Vector3D(0, 0, 0);
+
+				// The radius of a small grid large wheel is 1.25 (2.5 small blocks)
+				edgeDetectionCollider_ = new HollowSphereCollider(center, 1.25, 3.0);
 			}
 
 			/// <summary>

@@ -65,11 +65,27 @@ namespace IngameScript
 
 			var cameraList = new List<IMyCameraBlock>();
 			GridTerminalSystem.GetBlocksOfType<IMyCameraBlock>(cameraList);
-			
+
+			double dist = 999999;
+
 			foreach (var camera in cameraList)
 			{
 				cameras.AddCamera(camera);
+
+				foreach (var camera2 in cameraList)
+				{
+					if (camera != camera2)
+					{
+						var thisDist = Vector3D.Distance(camera.GetPosition(), camera2.GetPosition());
+						if (thisDist < dist)
+						{
+							dist = thisDist;
+						}
+					}
+				}
 			}
+
+			Echo(dist.ToString());
 
 			points = new List<Vector3D>();
 
@@ -101,13 +117,15 @@ namespace IngameScript
 			if (argument == "dump")
 			{
 				string dumpText = "";
-				for (int i = 0; i < 1000; i++)
+				for (int i = 0; i < 1900; i++)
 				{
 					var point = points.First();
 					dumpText += "a(" + Math.Round(point.X, 2).ToString() + "," + Math.Round(point.Y, 2).ToString() + "," + Math.Round(point.Z, 2).ToString() + ");\n";
 					points.RemoveAt(0);
 				}
 				Me.CustomData = dumpText;
+
+				Echo(points.Count().ToString());
 			}
 			else if (argument == "reset")
 			{
