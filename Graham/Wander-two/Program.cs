@@ -46,6 +46,9 @@ namespace IngameScript
 		List<Vector3D> points;
 		bool recording;
 
+		TerrainMap terrainMap;
+		MovementPlanner movementPlanner;
+
         public Program()
         {
             // The constructor, called only once every session and
@@ -86,53 +89,52 @@ namespace IngameScript
             // needed.
         }
 
-        public void Main(string argument, UpdateType updateSource)
-        {
-			// The main entry point of the script, invoked every time
-			// one of the programmable block's Run actions are invoked,
-			// or the script updates itself. The updateSource argument
-			// describes where the update came from. Be aware that the
-			// updateSource is a  bitfield  and might contain more than 
-			// one update type.
-			// 
-			// The method itself is required, but the arguments above
-			// can be removed if not needed.
-
-			if (argument == "dump")
+		public void Main(string argument, UpdateType updateSource)
+		{
+			// Update terrain map and movement planner
+			if ((updateSource & UpdateType.Update1) != 0)
 			{
-				string dumpText = "";
-				for (int i = 0; i < 1000; i++)
+
+			}
+			else
+			{
+				// Take terminal arguments
+				if (argument == "dump")
 				{
-					var point = points.First();
-					dumpText += "a(" + Math.Round(point.X, 2).ToString() + "," + Math.Round(point.Y, 2).ToString() + "," + Math.Round(point.Z, 2).ToString() + ");\n";
-					points.RemoveAt(0);
+					string dumpText = "";
+					for (int i = 0; i < 1000; i++)
+					{
+						var point = points.First();
+						dumpText += "a(" + Math.Round(point.X, 2).ToString() + "," + Math.Round(point.Y, 2).ToString() + "," + Math.Round(point.Z, 2).ToString() + ");\n";
+						points.RemoveAt(0);
+					}
+					Me.CustomData = dumpText;
 				}
-				Me.CustomData = dumpText;
-			}
-			else if (argument == "reset")
-			{
-				points.Clear();
-			}
-			else if (argument == "stop")
-			{
-				recording = false;
-			}
-			else if (argument == "start")
-			{
-				recording = true;
-			}
-
-			if (recording)
-			{
-				var newPoints = cameras.ScanRandomAll(30);
-
-				foreach (var point in newPoints)
+				else if (argument == "reset")
 				{
-					points.Add((Vector3D)point.HitPosition);
+					points.Clear();
+				}
+				else if (argument == "stop")
+				{
+					recording = false;
+				}
+				else if (argument == "start")
+				{
+					recording = true;
 				}
 
-				Echo(points.Count().ToString());
+				if (recording)
+				{
+					var newPoints = cameras.ScanRandomAll(30);
+
+					foreach (var point in newPoints)
+					{
+						points.Add((Vector3D)point.HitPosition);
+					}
+
+					Echo(points.Count().ToString());
+				}
 			}
-        }
+		}
     }
 }

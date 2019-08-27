@@ -70,7 +70,7 @@ namespace IngameScript
 				Vector2D Position { get; set; }
 			}
 
-			public class CircleCollider : Collider
+			/*public class CircleCollider : Collider
 			{
 				Vector2D center_;
 				double radius_;
@@ -122,7 +122,7 @@ namespace IngameScript
 						radius_ = value;
 					}
 				}
-			}
+			}*/
 
 			public class RectangleCollider : Collider
 			{
@@ -282,12 +282,12 @@ namespace IngameScript
 					markedForDeletion_ = false;
 				}
 
-				public void CreateChildNodes(QuadTree tree)
+				public void CreateChildNodes(ref QuadTree tree)
 				{
 					// Create extremes
-					CreateChildNode(tree, facingAngle_);
-					CreateChildNode(tree, facingAngle_ + MAXIMUM_TURN_DEGREES);
-					CreateChildNode(tree, facingAngle_ - MAXIMUM_TURN_DEGREES);
+					CreateChildNode(ref tree, facingAngle_);
+					CreateChildNode(ref tree, facingAngle_ + MAXIMUM_TURN_DEGREES);
+					CreateChildNode(ref tree, facingAngle_ - MAXIMUM_TURN_DEGREES);
 
 					// Create additional angles
 					if (EXTRA_TURN_ANGLES > 0)
@@ -295,14 +295,14 @@ namespace IngameScript
 						double increment = MAXIMUM_TURN_DEGREES / EXTRA_TURN_ANGLES;
 						for (int i = 1; i <= EXTRA_TURN_ANGLES; i++)
 						{
-							CreateChildNode(tree, facingAngle_ + increment * i);
-							CreateChildNode(tree, facingAngle_ - increment * i);
+							CreateChildNode(ref tree, facingAngle_ + increment * i);
+							CreateChildNode(ref tree, facingAngle_ - increment * i);
 						}
 					}
 
 				}
 
-				void CreateChildNode(QuadTree tree, double angle)
+				void CreateChildNode(ref QuadTree tree, double angle)
 				{
 					var newPosition = new Vector2D(Math.Cos(angle) * NODE_DISTANCE, Math.Sin(angle) * NODE_DISTANCE);
 
@@ -396,7 +396,7 @@ namespace IngameScript
 				/// <summary>
 				/// Returns the leaf node with the best heuristic value.
 				/// </summary>
-				public MovementNode GetBestNode()
+				public MovementNode GetBestChild()
 				{
 					if (children_.Count() == 0)
 					{
@@ -414,6 +414,14 @@ namespace IngameScript
 				public List<MovementNode> GetChildren()
 				{
 					return children_;
+				}
+
+				/// <summary>
+				/// Returns if this is a leaf node.
+				/// </summary>
+				public bool IsLeaf()
+				{
+					return children_.Count() == 0;
 				}
 			}
 
@@ -486,16 +494,25 @@ namespace IngameScript
 				}
 
 				/// <summary>
-				/// Attempts to add a node. Fails if there is a potentially dangerous collision.
+				/// Attempts to add a node. Fails if there is a potentially dangerous collision, or if no points were nearby.
 				/// </summary>
 				public bool AddNode(MovementNode node)
 				{
 					// Check for collisions around the node.
 					invalidNodeDetectionCollider_.CenterOn(node);
 
+					// Track how many points were within the collider here.
+					int numPointsDetected = 0;
+
 					// I need to make this properly check for collisions around it. Just the same tile isn't enough!
-					if (!GetAnyDangerousPointCollisions(invalidNodeDetectionCollider_))
+					if (!GetAnyDangerousPointCollisions(invalidNodeDetectionCollider_, ref numPointsDetected))
 					{
+						// If no points were detected within the selected area, count it as dangerous.
+						if (numPointsDetected == 0)
+						{
+							return false;
+						}
+
 						var container = GetContainingChild(node.Position);
 						container.nodes_.Add(node);
 						return true;
@@ -506,7 +523,7 @@ namespace IngameScript
 					}
 				}
 
-				public bool GetAnyDangerousPointCollisions(Collider collider)
+				public bool GetAnyDangerousPointCollisions(Collider collider, ref int pointsCollided)
 				{
 					// Automatically disqualify this quadrant if no points in it could be contained by the collider.
 					if (Vector2D.Distance(center_, collider.Position) <= extents_.Length() + collider.MaxExtent)
@@ -515,9 +532,14 @@ namespace IngameScript
 						{
 							foreach (var point in points_)
 							{
-								if (point.Dangerous && collider.Contains(point.Position))
+								if (collider.Contains(point.Position))
 								{
-									return true;
+									if (point.Dangerous)
+									{
+										return true;
+									}
+
+									pointsCollided++;
 								}
 							}
 						}
@@ -525,7 +547,7 @@ namespace IngameScript
 						{
 							foreach (var child in children_)
 							{
-								if (child.GetAnyDangerousPointCollisions(collider))
+								if (child.GetAnyDangerousPointCollisions(collider, ref pointsCollided))
 								{
 									return true;
 								}
