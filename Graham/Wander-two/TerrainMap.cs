@@ -23,7 +23,7 @@ namespace IngameScript
 	{
 		public class TerrainMap
 		{
-			const int MAXIMUM_DEPTH = 9;
+			const int MAXIMUM_DEPTH = 10;
 			const int MINIMUM_POINTS = 1;
 			int currentTime_;
 			OcTree pointCloud_;

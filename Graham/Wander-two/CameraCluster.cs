@@ -23,6 +23,10 @@ namespace IngameScript
 	{
 		public class CameraCluster
 		{
+			// TODO:
+			// Make cameras only look downwards (not up and down).
+			//		- Figure out whether downwards is the positive or negative angle.
+
 			/// <summary>
 			/// Magic constant for how much scan distance is gained per tick. Derived from testing.
 			/// </summary>
@@ -88,7 +92,7 @@ namespace IngameScript
 
 						lastScanHit_ = camera.Raycast(distance, randomPitch, randomYaw);
 
-						if (!lastScanHit_.IsEmpty())
+						if (!lastScanHit_.IsEmpty() && lastScanHit_.EntityId != camera.EntityId)
 						{
 							listToReturn.Add(lastScanHit_);
 						}

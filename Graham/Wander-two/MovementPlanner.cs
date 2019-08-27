@@ -709,7 +709,7 @@ namespace IngameScript
 					}
 				}
 
-				public void GetPoints(ref List<Vector2D> points)
+				public void GetPoints(ref List<Point2D> points)
 				{
 					foreach (var child in children_)
 					{
@@ -718,7 +718,23 @@ namespace IngameScript
 
 					foreach (var point in points_)
 					{
-						points.Add(point.Position);
+						points.Add(point);
+					}
+				}
+
+				public void GetDangerousPoints(ref List<Point2D> points)
+				{
+					foreach (var child in children_)
+					{
+						child.GetDangerousPoints(ref points);
+					}
+
+					foreach (var point in points_)
+					{
+						if (point.Dangerous)
+						{
+							points.Add(point);
+						}
 					}
 				}
 
@@ -750,11 +766,20 @@ namespace IngameScript
 				return points_.AddPoint(new Point2D(point, dangerous, timeout));
 			}
 
-			public List<Vector2D> GetPoints()
+			public List<Point2D> GetPoints()
 			{
-				var points = new List<Vector2D>();
+				var points = new List<Point2D>();
 
 				points_.GetPoints(ref points);
+
+				return points;
+			}
+
+			public List<Point2D> GetDangerousPoints()
+			{
+				var points = new List<Point2D>();
+
+				points_.GetDangerousPoints(ref points);
 
 				return points;
 			}

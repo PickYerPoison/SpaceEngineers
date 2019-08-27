@@ -25,21 +25,24 @@ namespace PointCloudViewer
 	{
 		List<VRageMath.Vector3D> pointsToAdd;
 
+		Program.TerrainMap terrainMap;
+		Program.MovementPlanner movementPlanner;
+
 		public MainWindow()
 		{
 			InitializeComponent();
 
-			var upDirection = new VRageMath.Vector3D(0, 1, 0);
+			var upDirection = new VRageMath.Vector3D(5.9743, 3.4494, 6.8745);
 
-			var terrainMap = new Program.TerrainMap(new VRageMath.Vector3D(0, 0, 0),
+			terrainMap = new Program.TerrainMap(new VRageMath.Vector3D(0, 0, 0),
 												new VRageMath.Vector3D(500, 500, 500));
 			terrainMap.SetUpDirection(upDirection);
 
 			// Create the movement planner
-			var movementPlanner = new Program.MovementPlanner(new VRageMath.Vector2D(0, 0), new VRageMath.Vector2D(100, 100));
+			movementPlanner = new Program.MovementPlanner(new VRageMath.Vector2D(0, 0), new VRageMath.Vector2D(100, 100));
 
 			// Create the ground plane
-			var groundPlane = new VRageMath.PlaneD(upDirection, 0);
+			var groundPlane = new VRageMath.PlaneD(VRageMath.Vector3D.Normalize(upDirection), 0);
 
 			pointsToAdd = new List<VRageMath.Vector3D>();
 
@@ -47,49 +50,58 @@ namespace PointCloudViewer
 
 			var pointOffset = new VRageMath.Vector3D(pointsToAdd.First().X, pointsToAdd.First().Y, pointsToAdd.First().Z);
 
+			int numDangerousPoints = 0;
+
 			foreach (var referencedPointFromList in pointsToAdd)
 			{
 				var pointToAdd = -(referencedPointFromList - pointOffset);
 
 				var dangerousPoints = terrainMap.AddPoint(pointToAdd, 1);
 
-				/*var referencePoint = new VRageMath.Vector3D(pointToAdd);
+				if (dangerousPoints.Count() > 0)
+				{
+					numDangerousPoints++;
+				}
+
+				var referencePoint = new VRageMath.Vector3D(pointToAdd);
 				var projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
 				movementPlanner.AddPoint(new VRageMath.Vector2D(projectedPoint.X, projectedPoint.Z), dangerousPoints.Count() > 0, 1);
 
 				foreach (var dangerousPoint in dangerousPoints)
 				{
-					// Add to visual display
-					var pointLine = new HelixToolkit.Wpf.LinesVisual3D();
-					pointLine.Points.Add(new Point3D(pointToAdd.X, pointToAdd.Z, pointToAdd.Y));
-					pointLine.Points.Add(new Point3D(dangerousPoint.Position.X, dangerousPoint.Position.Z, dangerousPoint.Position.Y));
-					Viewport3D.Children.Add(pointLine);
-
 					// Add to movement planner
 					referencePoint = new VRageMath.Vector3D(dangerousPoint.Position);
 					projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
 					movementPlanner.AddPoint(new VRageMath.Vector2D(projectedPoint.X, projectedPoint.Z), true, dangerousPoint.Timeout);
-				}*/
+				}
 			}
 
 			var points = terrainMap.GetPoints();
 
 			var centerPoint = new VRageMath.Vector3D(0, 0, 0);
 
-			/*var upLine = new HelixToolkit.Wpf.LinesVisual3D();
+			var upLine = new HelixToolkit.Wpf.LinesVisual3D();
 			upLine.Points.Add(new Point3D(0, 0, 0));
-			upLine.Points.Add(new Point3D(0, 0, 5));
+			upLine.Points.Add(new Point3D(upDirection.X, upDirection.Z, upDirection.Y));
 			Viewport3D.Children.Add(upLine);
 
 			var centerPointBody = new HelixToolkit.Wpf.SphereVisual3D();
 			centerPointBody.Center = new Point3D(0, 0, 0);
 			centerPointBody.Radius = 0.1;
 			centerPointBody.Material = new DiffuseMaterial();
-			Viewport3D.Children.Add(centerPointBody);*/
+			Viewport3D.Children.Add(centerPointBody);
+
+			//DrawTerrainMapLines();
+			DrawMovementPlanner();
+		}
+
+		void DrawTerrainMapLines()
+		{
+			var points = terrainMap.GetPoints();
 
 			var connectPoints = new HashSet<Tuple<int, int>>();
 
-			var collider = new Program.TerrainMap.SphereCollider(new VRageMath.Vector3D(0, 0, 0), 2.5);
+			var collider = new Program.TerrainMap.SphereCollider(new VRageMath.Vector3D(0, 0, 0), 1);
 
 			for (int i = 0; i < points.Count(); i++)
 			{
@@ -135,21 +147,42 @@ namespace PointCloudViewer
 				pointLine.Points.Add(new Point3D(p2.X, p2.Y, p2.Z));
 				Viewport3D.Children.Add(pointLine);
 			}
+		}
 
+		void DrawTerrainMapPoints()
+		{
+			foreach (var point in terrainMap.GetPoints())
+			{
+				var tempPointBody = new HelixToolkit.Wpf.SphereVisual3D();
+				tempPointBody.Center = new Point3D(point.X, point.Y, point.Z);
+				tempPointBody.Radius = 0.1;
+				Viewport3D.Children.Add(tempPointBody);
+			}
+		}
+
+		void DrawMovementPlanner()
+		{
 			var flatPoints = movementPlanner.GetPoints();
-			flatPoints.Add(new VRageMath.Vector2D(0, 0));
 
 			foreach (var point in flatPoints)
 			{
 				var flatPointBody = new Ellipse();
-				flatPointBody.Width = 10;
-				flatPointBody.Height = 10;
-				flatPointBody.Stroke = Brushes.Black;
-				flatPointBody.Fill = Brushes.Black;
+				flatPointBody.Width = 2;
+				flatPointBody.Height = 2;
+				if (point.Dangerous)
+				{
+					flatPointBody.Stroke = Brushes.Red;
+					flatPointBody.Fill = Brushes.Red;
+				}
+				else
+				{
+					flatPointBody.Stroke = Brushes.Black;
+					flatPointBody.Fill = Brushes.Black;
+				}
 
-				Canvas.SetLeft(flatPointBody, point.X * 5);
-				Canvas.SetTop(flatPointBody, point.Y * 5);
-				
+				Canvas.SetLeft(flatPointBody, point.Position.X * 2);
+				Canvas.SetTop(flatPointBody, point.Position.Y * 2);
+
 				Canvas2D.Children.Add(flatPointBody);
 			}
 		}

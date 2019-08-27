@@ -94,14 +94,26 @@ namespace IngameScript
 			// Update terrain map and movement planner
 			if ((updateSource & UpdateType.Update1) != 0)
 			{
+				var newPoints = cameras.ScanRandomAll(50);
 
+				foreach (var point in newPoints)
+				{
+					points.Add((Vector3D)point.HitPosition);
+				}
 			}
 			else
 			{
 				// Take terminal arguments
 				if (argument == "dump")
 				{
+					var x = new List<IMyShipController>();
+					GridTerminalSystem.GetBlocksOfType<IMyShipController>(x);
+					var c = x.First();
+					var g = c.GetNaturalGravity();
+					Me.CustomData = g.ToString();
+
 					string dumpText = "";
+
 					for (int i = 0; i < 1000; i++)
 					{
 						var point = points.First();
