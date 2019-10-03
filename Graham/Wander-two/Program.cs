@@ -46,8 +46,7 @@ namespace IngameScript
 		List<Vector3D> points;
 		bool recording;
 
-		TerrainMap terrainMap;
-		MovementPlanner movementPlanner;
+		MapManager mapManager_;
 
         public Program()
         {
@@ -77,6 +76,8 @@ namespace IngameScript
 			points = new List<Vector3D>();
 
 			recording = false;
+
+			mapManager_ = new MapManager();
         }
 
         public void Save()
@@ -110,7 +111,7 @@ namespace IngameScript
 					GridTerminalSystem.GetBlocksOfType<IMyShipController>(x);
 					var c = x.First();
 					var g = c.GetNaturalGravity();
-					Me.CustomData = g.ToString();
+					Echo(g.ToString());
 
 					string dumpText = "";
 

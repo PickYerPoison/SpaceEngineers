@@ -24,9 +24,10 @@ namespace IngameScript
 		public class TerrainMap
 		{
 			const int MAXIMUM_DEPTH = 10;
-			const int MINIMUM_POINTS = 1;
+			const int MINIMUM_POINTS = 5;
+			int pointsAdded_;
 			int currentTime_;
-			OcTree pointCloud_;
+			OcTree points_;
 			Collider edgeDetectionCollider_;
 			Vector3D upDirection_;
 
@@ -242,32 +243,20 @@ namespace IngameScript
 				}
 			}
 
-			public class Point3D
+			public struct Point3D
 			{
-				Vector3D position_;
-				int timeout_;
-
-				public Point3D(Vector3D position, int timeout)
+				public Point3D(Vector3D position, int id, int timeout)
 				{
-					position_ = position;
-					timeout_ = timeout;
+					Position = position;
+					ID = id;
+					Timeout = timeout;
 				}
 
-				public Vector3D Position
-				{
-					get
-					{
-						return position_;
-					}
-				}
+				public Vector3D Position { get; }
 
-				public int Timeout
-				{
-					get
-					{
-						return timeout_;
-					}
-				}
+				public int ID { get; }
+
+				public int Timeout { get; }
 			}
 
 			class OcTree
@@ -308,14 +297,12 @@ namespace IngameScript
 					}
 					else
 					{
-						if (points_.Count() < MINIMUM_POINTS)
+						points_.Add(point);
+						// Subdivide if reached minimum points (and not maximum depth)
+						if (points_.Count() >= MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH &&
+							extents_.X > 1 && extents_.Y > 1 && extents_.Z > 1)
 						{
-							points_.Add(point);
-							// Subdivide if reached minimum points (and not maximum depth)
-							if (points_.Count() >= MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH)
-							{
-								Subdivide();
-							}
+							Subdivide();
 						}
 					}
 				}
@@ -495,11 +482,20 @@ namespace IngameScript
 						return center_;
 					}
 				}
+
+				public Vector3D Extents
+				{
+					get
+					{
+						return extents_;
+					}
+				}
 			}
 			
 			public TerrainMap(Vector3D center, Vector3D extents)
 			{
-				pointCloud_ = new OcTree(center, extents, 0);
+				pointsAdded_ = 0;
+				points_ = new OcTree(center, extents, 0);
 				currentTime_ = 0;
 				upDirection_ = new Vector3D(0, 0, 0);
 
@@ -517,7 +513,7 @@ namespace IngameScript
 
 				// Find possible dangerous edges
 				var candidatePoints = new List<Point3D>();
-				pointCloud_.GetCollisions(ref candidatePoints, edgeDetectionCollider_);
+				points_.GetCollisions(ref candidatePoints, edgeDetectionCollider_);
 
 				// Decide whether each point pairing is a dangerous edge
 				var dangerousPoints = new List<Point3D>();
@@ -531,8 +527,9 @@ namespace IngameScript
 					}
 				}
 
-				var newPoint = new Point3D(point, timeout);
-				pointCloud_.AddPoint(newPoint);
+				var newPoint = new Point3D(point, pointsAdded_, timeout);
+				points_.AddPoint(newPoint);
+				pointsAdded_++;
 				if (pointIsDangerous)
 				{
 					dangerousPoints.Add(newPoint);
@@ -552,30 +549,59 @@ namespace IngameScript
 				return angle > 50 || angle < -50;
 			}
 
-			public void SetUpDirection(Vector3D upDirection)
+			public Vector3D UpDirection
 			{
-				upDirection_ = upDirection;
+				get
+				{
+					return upDirection_;
+				}
+				set
+				{
+					upDirection_ = value;
+				}
 			}
 
 			public void UpdateTick(int ticksSinceLastUpdate)
 			{
 				currentTime_ += ticksSinceLastUpdate;
-				pointCloud_.Update(currentTime_);
+				points_.Update(currentTime_);
 			}
 
 			public List<Vector3D> GetPoints()
 			{
 				var points = new List<Vector3D>();
-				pointCloud_.GetPoints(ref points);
+				points_.GetPoints(ref points);
 				return points;
 			}
 
 			public List<Point3D> GetCollisions(Collider collider)
 			{
 				var points = new List<Point3D>();
-				pointCloud_.GetCollisions(ref points, collider);
+				points_.GetCollisions(ref points, collider);
 				return points;
 			}
+
+			public int GetNumberOfPoints()
+			{
+				return pointsAdded_;
+			}
+
+			public Vector3D Center
+			{
+				get
+				{
+					return points_.Center;
+				}
+			}
+
+			public Vector3D Extents
+			{
+				get
+				{
+					return points_.Extents;
+				}
+			}
 		}
+
 	}
 }
