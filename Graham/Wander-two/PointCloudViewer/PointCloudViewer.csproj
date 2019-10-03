@@ -131,6 +131,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MapDisplay.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

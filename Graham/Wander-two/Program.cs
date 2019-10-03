@@ -46,6 +46,8 @@ namespace IngameScript
 		List<Vector3D> points;
 		bool recording;
 
+		MapManager mapManager_;
+
         public Program()
         {
             // The constructor, called only once every session and
@@ -65,31 +67,17 @@ namespace IngameScript
 
 			var cameraList = new List<IMyCameraBlock>();
 			GridTerminalSystem.GetBlocksOfType<IMyCameraBlock>(cameraList);
-
-			double dist = 999999;
-
+			
 			foreach (var camera in cameraList)
 			{
 				cameras.AddCamera(camera);
-
-				foreach (var camera2 in cameraList)
-				{
-					if (camera != camera2)
-					{
-						var thisDist = Vector3D.Distance(camera.GetPosition(), camera2.GetPosition());
-						if (thisDist < dist)
-						{
-							dist = thisDist;
-						}
-					}
-				}
 			}
-
-			Echo(dist.ToString());
 
 			points = new List<Vector3D>();
 
 			recording = false;
+
+			mapManager_ = new MapManager();
         }
 
         public void Save()
@@ -102,55 +90,64 @@ namespace IngameScript
             // needed.
         }
 
-        public void Main(string argument, UpdateType updateSource)
-        {
-			// The main entry point of the script, invoked every time
-			// one of the programmable block's Run actions are invoked,
-			// or the script updates itself. The updateSource argument
-			// describes where the update came from. Be aware that the
-			// updateSource is a  bitfield  and might contain more than 
-			// one update type.
-			// 
-			// The method itself is required, but the arguments above
-			// can be removed if not needed.
-
-			if (argument == "dump")
+		public void Main(string argument, UpdateType updateSource)
+		{
+			// Update terrain map and movement planner
+			if ((updateSource & UpdateType.Update1) != 0)
 			{
-				string dumpText = "";
-				for (int i = 0; i < 1900; i++)
-				{
-					var point = points.First();
-					dumpText += "a(" + Math.Round(point.X, 2).ToString() + "," + Math.Round(point.Y, 2).ToString() + "," + Math.Round(point.Z, 2).ToString() + ");\n";
-					points.RemoveAt(0);
-				}
-				Me.CustomData = dumpText;
-
-				Echo(points.Count().ToString());
-			}
-			else if (argument == "reset")
-			{
-				points.Clear();
-			}
-			else if (argument == "stop")
-			{
-				recording = false;
-			}
-			else if (argument == "start")
-			{
-				recording = true;
-			}
-
-			if (recording)
-			{
-				var newPoints = cameras.ScanRandomAll(30);
+				var newPoints = cameras.ScanRandomAll(50);
 
 				foreach (var point in newPoints)
 				{
 					points.Add((Vector3D)point.HitPosition);
 				}
-
-				Echo(points.Count().ToString());
 			}
-        }
+			else
+			{
+				// Take terminal arguments
+				if (argument == "dump")
+				{
+					var x = new List<IMyShipController>();
+					GridTerminalSystem.GetBlocksOfType<IMyShipController>(x);
+					var c = x.First();
+					var g = c.GetNaturalGravity();
+					Echo(g.ToString());
+
+					string dumpText = "";
+
+					for (int i = 0; i < 1000; i++)
+					{
+						var point = points.First();
+						dumpText += "a(" + Math.Round(point.X, 2).ToString() + "," + Math.Round(point.Y, 2).ToString() + "," + Math.Round(point.Z, 2).ToString() + ");\n";
+						points.RemoveAt(0);
+					}
+					Me.CustomData = dumpText;
+				}
+				else if (argument == "reset")
+				{
+					points.Clear();
+				}
+				else if (argument == "stop")
+				{
+					recording = false;
+				}
+				else if (argument == "start")
+				{
+					recording = true;
+				}
+
+				if (recording)
+				{
+					var newPoints = cameras.ScanRandomAll(30);
+
+					foreach (var point in newPoints)
+					{
+						points.Add((Vector3D)point.HitPosition);
+					}
+
+					Echo(points.Count().ToString());
+				}
+			}
+		}
     }
 }

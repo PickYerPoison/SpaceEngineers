@@ -44,11 +44,16 @@ namespace IngameScript
 			const double NODE_DISTANCE = 10;
 
 			const int MAXIMUM_DEPTH = 10;
-			const int MINIMUM_POINTS = 1;
+			const int MINIMUM_POINTS = 5;
 			int currentTime_;
 
 			QuadTree points_;
-			MovementNode baseNode_;
+
+			public enum ColliderTypeEnum
+			{
+				CIRCLE,
+				RECTANGLE
+			}
 
 			public interface Collider
 			{
@@ -68,6 +73,8 @@ namespace IngameScript
 				double MaxExtent { get; }
 
 				Vector2D Position { get; set; }
+
+				ColliderTypeEnum Type { get; }
 			}
 
 			public class CircleCollider : Collider
@@ -120,6 +127,14 @@ namespace IngameScript
 					set
 					{
 						radius_ = value;
+					}
+				}
+
+				public ColliderTypeEnum Type
+				{
+					get
+					{
+						return ColliderTypeEnum.CIRCLE;
 					}
 				}
 			}
@@ -204,44 +219,33 @@ namespace IngameScript
 						rotation_ = value;
 					}
 				}
+
+				public ColliderTypeEnum Type
+				{
+					get
+					{
+						return ColliderTypeEnum.RECTANGLE;
+					}
+				}
 			}
 
-			public class Point2D
+			public struct Point2D
 			{
-				Vector2D position_;
-				int timeout_;
-				bool dangerous_;
-
-				public Point2D(Vector2D position, bool dangerous, int timeout)
+				public Point2D(Vector2D position, int id, bool dangerous, int timeout)
 				{
-					position_ = position;
-					dangerous_ = dangerous;
-					timeout_ = timeout;
+					Position = position;
+					ID = id;
+					Dangerous = dangerous;
+					Timeout = timeout;
 				}
 
-				public Vector2D Position
-				{
-					get
-					{
-						return position_;
-					}
-				}
+				public Vector2D Position { get; }
 
-				public bool Dangerous
-				{
-					get
-					{
-						return dangerous_;
-					}
-				}
+				public int ID { get; }
 
-				public int Timeout
-				{
-					get
-					{
-						return timeout_;
-					}
-				}
+				public bool Dangerous { get; }
+
+				public int Timeout { get; }
 			}
 
 			public class MovementNode
@@ -264,6 +268,10 @@ namespace IngameScript
 
 				List<MovementNode> children_;
 
+				public List<MovementNode> Children { get { return children_; } }
+
+				public bool GeneratedChildren { get; set; }
+
 				int depth_;
 
 				bool markedForDeletion_;
@@ -280,31 +288,33 @@ namespace IngameScript
 
 					children_ = new List<MovementNode>();
 					markedForDeletion_ = false;
+					GeneratedChildren = false;
 				}
 
-				public void CreateChildNodes(QuadTree tree)
+				public void CreateChildNodes(ref QuadTree tree)
 				{
 					// Create extremes
-					CreateChildNode(tree, facingAngle_);
-					CreateChildNode(tree, facingAngle_ + MAXIMUM_TURN_DEGREES);
-					CreateChildNode(tree, facingAngle_ - MAXIMUM_TURN_DEGREES);
+					CreateChildNode(ref tree, facingAngle_);
+					CreateChildNode(ref tree, facingAngle_ + DegreesToRadians(MAXIMUM_TURN_DEGREES));
+					CreateChildNode(ref tree, facingAngle_ - DegreesToRadians(MAXIMUM_TURN_DEGREES));
 
 					// Create additional angles
-					if (EXTRA_TURN_ANGLES > 0)
+					/*if (EXTRA_TURN_ANGLES > 0)
 					{
 						double increment = MAXIMUM_TURN_DEGREES / EXTRA_TURN_ANGLES;
 						for (int i = 1; i <= EXTRA_TURN_ANGLES; i++)
 						{
-							CreateChildNode(tree, facingAngle_ + increment * i);
-							CreateChildNode(tree, facingAngle_ - increment * i);
+							CreateChildNode(ref tree, facingAngle_ + increment * i);
+							CreateChildNode(ref tree, facingAngle_ - increment * i);
 						}
-					}
+					}*/
 
+					GeneratedChildren = true;
 				}
 
-				void CreateChildNode(QuadTree tree, double angle)
+				void CreateChildNode(ref QuadTree tree, double angle)
 				{
-					var newPosition = new Vector2D(Math.Cos(angle) * NODE_DISTANCE, Math.Sin(angle) * NODE_DISTANCE);
+					var newPosition = new Vector2D(Math.Cos(angle) * NODE_DISTANCE, Math.Sin(angle) * NODE_DISTANCE) + position_;
 
 					var newNode = new MovementNode(newPosition, angle, desiredSpeed_, goal_, depth_ + 1);
 
@@ -396,7 +406,7 @@ namespace IngameScript
 				/// <summary>
 				/// Returns the leaf node with the best heuristic value.
 				/// </summary>
-				public MovementNode GetBestNode()
+				public MovementNode GetBestChild()
 				{
 					if (children_.Count() == 0)
 					{
@@ -409,11 +419,28 @@ namespace IngameScript
 				}
 
 				/// <summary>
-				/// Returns the list of child nodes. This is mainly for debug purposes.
+				/// Returns if this is a leaf node.
 				/// </summary>
-				public List<MovementNode> GetChildren()
+				public bool IsLeaf()
 				{
-					return children_;
+					return children_.Count() == 0;
+				}
+
+				public void DebugSetAngle(double angleInDegrees)
+				{
+					facingAngle_ = DegreesToRadians(angleInDegrees);
+					GeneratedChildren = false;
+					children_.Clear();
+				}
+
+				public static double DegreesToRadians(double angleInDegrees)
+				{
+					return angleInDegrees * (Math.PI / 180.0);
+				}
+
+				public static double RadiansToDegrees(double angleInRadians)
+				{
+					return angleInRadians * (180.0 / Math.PI);
 				}
 			}
 
@@ -445,11 +472,6 @@ namespace IngameScript
 							point.Y >= center_.Y - extents_.Y && point.Y < center_.Y + extents_.Y);
 				}
 
-				public bool GetOccupied()
-				{
-					return (points_.Count() > 0 || children_.Count() > 0);
-				}
-
 				/// <summary>
 				/// Adds a new point. Purges any movement nodes that are violated by it and reports if any were.
 				/// </summary>
@@ -463,11 +485,12 @@ namespace IngameScript
 					else
 					{
 						// Remove any matching points to avoid re-adding the same points
-						points_.RemoveAll(delegate (Point2D p1) { return p1.Position.Equals(point.Position); });
+						points_.RemoveAll(delegate (Point2D p1) { return p1.ID.Equals(point.ID); });
 
 						points_.Add(point);
 						// Subdivide if reached minimum points (and not maximum depth)
-						if (points_.Count() >= MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH)
+						if (points_.Count() >= MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH &&
+							extents_.X > 1 && extents_.Y > 1)
 						{
 							Subdivide();
 						}
@@ -486,16 +509,25 @@ namespace IngameScript
 				}
 
 				/// <summary>
-				/// Attempts to add a node. Fails if there is a potentially dangerous collision.
+				/// Attempts to add a node. Fails if there is a potentially dangerous collision, or if no points were nearby.
 				/// </summary>
 				public bool AddNode(MovementNode node)
 				{
 					// Check for collisions around the node.
 					invalidNodeDetectionCollider_.CenterOn(node);
 
+					// Track how many points were within the collider here.
+					int numPointsDetected = 0;
+
 					// I need to make this properly check for collisions around it. Just the same tile isn't enough!
-					if (!GetAnyDangerousPointCollisions(invalidNodeDetectionCollider_))
+					if (!GetAnyDangerousPointCollisions(invalidNodeDetectionCollider_, ref numPointsDetected))
 					{
+						// If no points were detected within the selected area, count it as dangerous.
+						if (numPointsDetected == 0)
+						{
+							return false;
+						}
+
 						var container = GetContainingChild(node.Position);
 						container.nodes_.Add(node);
 						return true;
@@ -506,7 +538,7 @@ namespace IngameScript
 					}
 				}
 
-				public bool GetAnyDangerousPointCollisions(Collider collider)
+				public bool GetAnyDangerousPointCollisions(Collider collider, ref int pointsCollided)
 				{
 					// Automatically disqualify this quadrant if no points in it could be contained by the collider.
 					if (Vector2D.Distance(center_, collider.Position) <= extents_.Length() + collider.MaxExtent)
@@ -515,9 +547,14 @@ namespace IngameScript
 						{
 							foreach (var point in points_)
 							{
-								if (point.Dangerous && collider.Contains(point.Position))
+								if (collider.Contains(point.Position))
 								{
-									return true;
+									if (point.Dangerous)
+									{
+										return true;
+									}
+
+									pointsCollided++;
 								}
 							}
 						}
@@ -525,7 +562,7 @@ namespace IngameScript
 						{
 							foreach (var child in children_)
 							{
-								if (child.GetAnyDangerousPointCollisions(collider))
+								if (child.GetAnyDangerousPointCollisions(collider, ref pointsCollided))
 								{
 									return true;
 								}
@@ -687,7 +724,7 @@ namespace IngameScript
 					}
 				}
 
-				public void GetPoints(ref List<Vector2D> points)
+				public void GetPoints(ref List<Point2D> points)
 				{
 					foreach (var child in children_)
 					{
@@ -696,7 +733,23 @@ namespace IngameScript
 
 					foreach (var point in points_)
 					{
-						points.Add(point.Position);
+						points.Add(point);
+					}
+				}
+
+				public void GetDangerousPoints(ref List<Point2D> points)
+				{
+					foreach (var child in children_)
+					{
+						child.GetDangerousPoints(ref points);
+					}
+
+					foreach (var point in points_)
+					{
+						if (point.Dangerous)
+						{
+							points.Add(point);
+						}
 					}
 				}
 
@@ -711,28 +764,61 @@ namespace IngameScript
 						invalidNodeDetectionCollider_ = value;
 					}
 				}
+
+				public List<QuadTree> Children
+				{
+					get
+					{
+						return children_;
+					}
+				}
+
+				public Vector2D Position
+				{
+					get
+					{
+						return center_;
+					}
+				}
+
+				public Vector2D Extents
+				{
+					get
+					{
+						return extents_;
+					}
+				}
 			}
 
 			public MovementPlanner(Vector2D center, Vector2D extents)
 			{
 				points_ = new QuadTree(center, extents, 0);
-				points_.InvalidNodeDetectionCollider = new RectangleCollider(center, new Vector2D(1, 1), 0);
+				points_.InvalidNodeDetectionCollider = new RectangleCollider(center, new Vector2D(3, 3), 0);
 				currentTime_ = 0;
 			}
 
 			/// <summary>
 			/// Adds a new point. Purges any movement nodes that are violated by it and reports if any were.
 			/// </summary>
-			public bool AddPoint(Vector2D point, bool dangerous, int timeout)
+			public bool AddPoint(Vector2D point, int id, bool dangerous, int timeout)
 			{
-				return points_.AddPoint(new Point2D(point, dangerous, timeout));
+				return points_.AddPoint(new Point2D(point, id, dangerous, timeout));
 			}
 
-			public List<Vector2D> GetPoints()
+			public List<Point2D> GetPoints()
 			{
-				var points = new List<Vector2D>();
+				var points = new List<Point2D>();
 
 				points_.GetPoints(ref points);
+
+				return points;
+			}
+
+			public List<Point2D> GetDangerousPoints()
+			{
+				var points = new List<Point2D>();
+
+				points_.GetDangerousPoints(ref points);
 
 				return points;
 			}
@@ -740,6 +826,31 @@ namespace IngameScript
 			public void SetInvalidNodeDetectionCollider(Collider collider)
 			{
 				points_.InvalidNodeDetectionCollider = collider;
+			}
+
+			public List<Point2D> GetCollidingPoints(Collider collider)
+			{
+				var collidingPoints = new List<Point2D>();
+				points_.GetPointCollisions(ref collidingPoints, collider);
+				return collidingPoints;
+			}
+
+			public void CreateChildren(MovementNode node)
+			{
+				foreach (var child in node.Children)
+				{
+					CreateChildren(child);
+				}
+
+				if (!node.GeneratedChildren)
+				{
+					node.CreateChildNodes(ref points_);
+				}
+			}
+
+			public QuadTree GetTree()
+			{
+				return points_;
 			}
 		}
 	}
