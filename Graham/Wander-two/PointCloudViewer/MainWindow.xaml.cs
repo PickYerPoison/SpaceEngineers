@@ -110,7 +110,7 @@ namespace PointCloudViewer
 			var extents = new VRageMath.Vector3D(maxDistance, maxDistance, maxDistance);
 
 			mapDisplay_.MapManager.TerrainMap = new Program.TerrainMap(centerPoint, extents);
-			mapDisplay_.MapManager.TerrainMap.UpDirection = new VRageMath.Vector3D(x, y, z);
+			mapDisplay_.MapManager.TerrainMap.UpDirection = VRageMath.Vector3D.Normalize(new VRageMath.Vector3D(x, y, z));
 			mapDisplay_.MapManager.GenerateMovementPlanner();
 
 			foreach (var pointToAdd in pointsToAdd)
@@ -119,11 +119,17 @@ namespace PointCloudViewer
 			}
 
 			mapDisplay_.ResetCenter2D();
+
+			//var lights = new DefaultLights();
+
+			//Viewport3D.Children.Add(lights);
+
+			//DrawTerrainMapPoints();
 		}
 
-		/*void DrawTerrainMapLines()
+		void DrawTerrainMapLines()
 		{
-			var points = terrainMap.GetPoints();
+			var points = mapDisplay_.MapManager.TerrainMap.GetPoints();
 
 			var connectPoints = new HashSet<Tuple<int, int>>();
 
@@ -134,7 +140,7 @@ namespace PointCloudViewer
 				var point = points[i];
 
 				collider.Position = point;
-				var nearbyPoints = terrainMap.GetCollisions(collider);
+				var nearbyPoints = mapDisplay_.MapManager.TerrainMap.GetCollisions(collider);
 
 				foreach (var nearPoint in nearbyPoints)
 				{
@@ -173,18 +179,18 @@ namespace PointCloudViewer
 				pointLine.Points.Add(new Point3D(p2.X, p2.Y, p2.Z));
 				Viewport3D.Children.Add(pointLine);
 			}
-		}*/
+		}
 
-		/*void DrawTerrainMapPoints()
+		void DrawTerrainMapPoints()
 		{
-			foreach (var point in terrainMap.GetPoints())
+			foreach (var point in mapDisplay_.MapManager.TerrainMap.GetPoints())
 			{
 				var tempPointBody = new HelixToolkit.Wpf.SphereVisual3D();
 				tempPointBody.Center = new Point3D(point.X, point.Y, point.Z);
 				tempPointBody.Radius = 0.1;
 				Viewport3D.Children.Add(tempPointBody);
 			}
-		}*/
+		}
 
 		void DrawMovementPlanner()
 		{
@@ -246,7 +252,6 @@ namespace PointCloudViewer
 
 		private void RadiusButton_Click(object sender, RoutedEventArgs e)
 		{
-			mapDisplay_.ClearPoints();
 			DrawMovementPlanner();
 		}
 

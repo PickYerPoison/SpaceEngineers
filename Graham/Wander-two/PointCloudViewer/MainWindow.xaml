@@ -14,7 +14,6 @@
             <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
         <h:HelixViewport3D x:Name="Viewport3D" BorderBrush="Black" BorderThickness="1" Grid.Column="0">
-            <!-- <h:DefaultLights/> -->
         </h:HelixViewport3D>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
@@ -40,7 +39,7 @@
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
-                <TextBox Name="ZoomBox" Grid.Row="0" HorizontalAlignment="Center" TextWrapping="NoWrap" Text="1.0" VerticalAlignment="Center" Width="76" />
+                <TextBox Name="ZoomBox" Grid.Row="0" HorizontalAlignment="Center" TextWrapping="NoWrap" Text="10.0" VerticalAlignment="Center" Width="76" />
                 <Button Content="Zoom" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Click="ZoomButton_Click"/>
             </Grid>
             <Grid Grid.Row="2">

@@ -24,8 +24,8 @@ namespace IngameScript
 		public class TerrainMap
 		{
 			const int MAXIMUM_DEPTH = 30;
-			const int MINIMUM_POINTS = 1;
-			const int MAXIMUM_POINTS = 3;
+			const int MINIMUM_POINTS = 5;
+			const int MAXIMUM_POINTS = 80000;
 			int pointsAdded_;
 			int currentTime_;
 			OcTree points_;
@@ -337,11 +337,18 @@ namespace IngameScript
 					{
 						if (children_.Count() == 0)
 						{
-							foreach (var point in points_)
+							int i = 0;
+							while (points_.Count() > 0 && i < points_.Count())
 							{
-								if (collider.Contains(point.Position))
+								if (collider.Contains(points_[i].Position))
 								{
-									collisions.Add(point);
+									collisions.Add(points_[i]);
+									i++;
+									//points_.RemoveAt(i);
+								}
+								else
+								{
+									i++;
 								}
 							}
 						}
@@ -515,11 +522,16 @@ namespace IngameScript
 				}
 
 				var newPoint = new Point3D(point, pointsAdded_, timeout);
-				points_.AddPoint(newPoint);
-				pointsAdded_++;
 				if (pointIsDangerous)
 				{
 					dangerousPoints.Add(newPoint);
+					points_.AddPoint(newPoint);
+					pointsAdded_++;
+				}
+				else
+				{
+					points_.AddPoint(newPoint);
+					pointsAdded_++;
 				}
 
 				return dangerousPoints;

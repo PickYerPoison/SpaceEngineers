@@ -26,12 +26,14 @@ namespace IngameScript
 			TerrainMap terrainMap_;
 			MovementPlanner movementPlanner_;
 			int numPoints_;
+			Vector3D addFromPoint;
 
 			public MapManager()
 			{
 				terrainMap_ = new TerrainMap(new Vector3D(0, 0, 0), new Vector3D(0, 0, 0));
 				movementPlanner_ = new MovementPlanner(new Vector2D(0, 0), new Vector2D(0, 0));
 				numPoints_ = 0;
+				addFromPoint = new Vector3D(-37271.87, -21511.58, -43519.86);
 			}
 
 			/// <summary>
@@ -40,7 +42,7 @@ namespace IngameScript
 			/// <remarks>Does not copy points. Must be done before adding any points.</remarks>
 			public void GenerateMovementPlanner()
 			{
-				var groundPlane = new PlaneD(Vector3D.Normalize(terrainMap_.UpDirection), 0);
+				var groundPlane = new PlaneD(addFromPoint, terrainMap_.UpDirection);
 
 				var referenceCenter = new Vector3D(terrainMap_.Center);
 				var projectedCenter = groundPlane.ProjectPoint(ref referenceCenter);
@@ -57,7 +59,8 @@ namespace IngameScript
 			{
 				var dangerousPoints = terrainMap_.AddPoint(point, timeout);
 
-				var groundPlane = new PlaneD(Vector3D.Normalize(terrainMap_.UpDirection), 0);
+				var groundPlane = new PlaneD(addFromPoint, terrainMap_.UpDirection);
+
 				var referencePoint = new Vector3D(point);
 				var projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
 				movementPlanner_.AddPoint(new Vector2D(projectedPoint.X, projectedPoint.Z), numPoints_, dangerousPoints.Count() > 0, timeout);

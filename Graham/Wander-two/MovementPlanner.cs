@@ -44,9 +44,8 @@ namespace IngameScript
 			const double NODE_DISTANCE = 10;
 
 			const int MAXIMUM_DEPTH = 30;
-			const int MINIMUM_POINTS = 1;
-			const int MAXIMUM_POINTS = 3;
-			int currentTime_;
+			const int MINIMUM_POINTS = 5;
+			const int MAXIMUM_POINTS = 80000;
 
 			QuadTree points_;
 
@@ -795,7 +794,6 @@ namespace IngameScript
 			{
 				points_ = new QuadTree(center, extents, 0);
 				points_.InvalidNodeDetectionCollider = new RectangleCollider(center, new Vector2D(3, 3), 0);
-				currentTime_ = 0;
 			}
 
 			/// <summary>

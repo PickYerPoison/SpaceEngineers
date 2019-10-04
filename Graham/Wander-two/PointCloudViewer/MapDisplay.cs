@@ -27,7 +27,7 @@ namespace PointCloudViewer
 		{
 			MapManager = new Program.MapManager();
 			Center2D = new VRageMath.Vector2D(0, 0);
-			Zoom2D = 1;
+			Zoom2D = 10;
 			drawnPoints_ = new List<Ellipse>();
 			drawnNodes_ = new List<Ellipse>();
 		}
@@ -51,8 +51,8 @@ namespace PointCloudViewer
 		{
 			if (points.Count > 0)
 			{
-				var lowSide = new VRageMath.Vector2D(points.First().Position.X, points.First().Position.Y);
-				var highSide = new VRageMath.Vector2D(points.First().Position.X, points.First().Position.Y);
+				var lowSide = points.First().Position;
+				var highSide = points.First().Position;
 
 				foreach (var point in points)
 				{
