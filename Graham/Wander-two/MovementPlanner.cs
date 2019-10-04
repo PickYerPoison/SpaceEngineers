@@ -43,8 +43,9 @@ namespace IngameScript
 			/// </summary>
 			const double NODE_DISTANCE = 10;
 
-			const int MAXIMUM_DEPTH = 10;
-			const int MINIMUM_POINTS = 5;
+			const int MAXIMUM_DEPTH = 30;
+			const int MINIMUM_POINTS = 1;
+			const int MAXIMUM_POINTS = 3;
 			int currentTime_;
 
 			QuadTree points_;
@@ -482,7 +483,7 @@ namespace IngameScript
 					{
 						GetContainingChild(point.Position).AddPoint(point);
 					}
-					else
+					else if (points_.Count() < MAXIMUM_POINTS)
 					{
 						// Remove any matching points to avoid re-adding the same points
 						points_.RemoveAll(delegate (Point2D p1) { return p1.ID.Equals(point.ID); });

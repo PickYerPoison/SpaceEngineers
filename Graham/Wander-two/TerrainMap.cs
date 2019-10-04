@@ -23,8 +23,9 @@ namespace IngameScript
 	{
 		public class TerrainMap
 		{
-			const int MAXIMUM_DEPTH = 10;
-			const int MINIMUM_POINTS = 5;
+			const int MAXIMUM_DEPTH = 30;
+			const int MINIMUM_POINTS = 1;
+			const int MAXIMUM_POINTS = 3;
 			int pointsAdded_;
 			int currentTime_;
 			OcTree points_;
@@ -295,7 +296,7 @@ namespace IngameScript
 					{
 						GetContainingChild(point.Position).AddPoint(point);
 					}
-					else
+					else if (points_.Count() < MAXIMUM_POINTS)
 					{
 						points_.Add(point);
 						// Subdivide if reached minimum points (and not maximum depth)
@@ -323,23 +324,9 @@ namespace IngameScript
 						}
 					}
 
-					if (points_.Count() > 0)
+					foreach (var child in children_)
 					{
-						// Undo subdivision if all children are empty
-						bool allChildrenEmpty = true;
-						foreach (var child in children_)
-						{
-							child.Update(currentTime);
-							if (allChildrenEmpty && child.GetOccupied())
-							{
-								allChildrenEmpty = false;
-							}
-						}
-
-						if (allChildrenEmpty)
-						{
-							children_.Clear();
-						}
+						child.Update(currentTime);
 					}
 				}
 

@@ -43,12 +43,17 @@ namespace IngameScript
         // to learn more about ingame scripts.
 
 		CameraCluster cameras;
-		List<Vector3D> points;
+		int points;
 		bool recording;
 
 		MapManager mapManager_;
 
-        public Program()
+		IMyShipController Controller;
+
+		List<MovementPlanner.Point2D> finalPoints;
+		List<Vector3D> hitLocations;
+
+		public Program()
         {
             // The constructor, called only once every session and
             // always before any other method is called. Use it to
@@ -73,11 +78,23 @@ namespace IngameScript
 				cameras.AddCamera(camera);
 			}
 
-			points = new List<Vector3D>();
+			points = 0;
 
 			recording = false;
 
+			var x = new List<IMyShipController>();
+			GridTerminalSystem.GetBlocksOfType<IMyShipController>(x);
+			Controller = x.First();
+			var g = Controller.GetNaturalGravity();
+			Me.CustomData = g.X.ToString() + "," + g.Y.ToString() + "," + g.Z.ToString();
+
 			mapManager_ = new MapManager();
+			mapManager_.TerrainMap = new TerrainMap(Me.GetPosition(), new Vector3D(500, 500, 500));
+			mapManager_.TerrainMap.UpDirection = -g;
+			mapManager_.GenerateMovementPlanner();
+
+			hitLocations = new List<Vector3D>();
+			finalPoints = new List<MovementPlanner.Point2D>();
         }
 
         public void Save()
@@ -95,11 +112,25 @@ namespace IngameScript
 			// Update terrain map and movement planner
 			if ((updateSource & UpdateType.Update1) != 0)
 			{
-				var newPoints = cameras.ScanRandomAll(50);
-
-				foreach (var point in newPoints)
+				if (recording)
 				{
-					points.Add((Vector3D)point.HitPosition);
+					mapManager_.TerrainMap.UpDirection = -Controller.GetNaturalGravity();
+
+					var newPoints = cameras.ScanRandomAll(50);	
+
+					foreach (var point in newPoints)
+					{
+						if (!point.IsEmpty())
+						{
+							hitLocations.Add((Vector3D)point.HitPosition);
+							points++;
+							//mapManager_.AddPoint((Vector3D)point.HitPosition, 500);
+						}
+					}
+
+					Echo(points.ToString());
+					Echo(hitLocations.Count().ToString());
+					Me.CustomData = points.ToString();
 				}
 			}
 			else
@@ -107,45 +138,67 @@ namespace IngameScript
 				// Take terminal arguments
 				if (argument == "dump")
 				{
-					var x = new List<IMyShipController>();
-					GridTerminalSystem.GetBlocksOfType<IMyShipController>(x);
-					var c = x.First();
-					var g = c.GetNaturalGravity();
-					Echo(g.ToString());
-
 					string dumpText = "";
 
-					for (int i = 0; i < 1000; i++)
+					/*for (int i = 0; i < 1000 && i < finalPoints.Count(); ++i)
 					{
-						var point = points.First();
-						dumpText += "a(" + Math.Round(point.X, 2).ToString() + "," + Math.Round(point.Y, 2).ToString() + "," + Math.Round(point.Z, 2).ToString() + ");\n";
-						points.RemoveAt(0);
+						var point = finalPoints.First();
+						dumpText += "a(" + Math.Round(point.Position.X, 2).ToString() + "," + Math.Round(point.Position.Y, 2).ToString() + ",";
+						if (point.Dangerous)
+						{
+							dumpText += "1";
+						}
+						else
+						{
+							dumpText += "0";
+						}
+						dumpText += ");\n";
+						finalPoints.RemoveAt(0);
+					}*/
+
+					Me.CustomData = "";
+					int couldPaste = 0;
+					bool keepGoing = hitLocations.Count() > 0;
+					while (keepGoing)
+					{
+						var point = hitLocations.First();
+						dumpText += "a(" + Math.Round(point.X, 2).ToString() + "," + Math.Round(point.Y, 2).ToString() + "," + Math.Round(point.Z, 2).ToString() + ");";
+						var oldData = Me.CustomData;
+						Me.CustomData = dumpText;
+						if (Me.CustomData.Length != dumpText.Length)
+						{
+							Me.CustomData = oldData;
+							keepGoing = false;
+						}
+						else
+						{
+							couldPaste++;
+							hitLocations.RemoveAt(0);
+
+							keepGoing = hitLocations.Count() > 0;
+						}
 					}
-					Me.CustomData = dumpText;
+					Me.CustomData += "\n";
+
+					Echo(couldPaste.ToString());
+					Echo(hitLocations.Count().ToString());
 				}
 				else if (argument == "reset")
 				{
-					points.Clear();
+					mapManager_ = new MapManager();
+					mapManager_.TerrainMap = new TerrainMap(Me.GetPosition(), new Vector3D(1000, 1000, 1000));
+					mapManager_.TerrainMap.UpDirection = -Controller.GetNaturalGravity();
+					mapManager_.GenerateMovementPlanner();
+					points = 0;
 				}
 				else if (argument == "stop")
 				{
 					recording = false;
+					//finalPoints = mapManager_.MovementPlanner.GetPoints();
 				}
 				else if (argument == "start")
 				{
 					recording = true;
-				}
-
-				if (recording)
-				{
-					var newPoints = cameras.ScanRandomAll(30);
-
-					foreach (var point in newPoints)
-					{
-						points.Add((Vector3D)point.HitPosition);
-					}
-
-					Echo(points.Count().ToString());
 				}
 			}
 		}
