@@ -89,9 +89,16 @@ namespace IngameScript
 			Me.CustomData = g.X.ToString() + "," + g.Y.ToString() + "," + g.Z.ToString();
 
 			mapManager_ = new MapManager();
-			mapManager_.TerrainMap = new TerrainMap(Me.GetPosition(), new Vector3D(500, 500, 500));
-			mapManager_.TerrainMap.UpDirection = -g;
+			mapManager_.TerrainMap = new TerrainMap(Controller.GetPosition(), new Vector3D(500, 500, 500));
+			mapManager_.UpDirection = -Controller.GetNaturalGravity();
+			mapManager_.SetX_Direction(Controller.WorldMatrix.Left);
+			mapManager_.SetY_Direction(Controller.WorldMatrix.Forward);
 			mapManager_.GenerateMovementPlanner();
+
+			var lwm = Controller.WorldMatrix.Left;
+			Me.CustomData += lwm.X.ToString() + "," + lwm.Y.ToString() + "," + lwm.Z.ToString();
+			lwm = Controller.WorldMatrix.Forward;
+			Me.CustomData += lwm.X.ToString() + "," + lwm.Y.ToString() + "," + lwm.Z.ToString();
 
 			hitLocations = new List<Vector3D>();
 			finalPoints = new List<MovementPlanner.Point2D>();
@@ -114,7 +121,7 @@ namespace IngameScript
 			{
 				if (recording)
 				{
-					mapManager_.TerrainMap.UpDirection = -Controller.GetNaturalGravity();
+					mapManager_.UpDirection = -Controller.GetNaturalGravity();
 
 					var newPoints = cameras.ScanRandomAll(50);	
 
@@ -187,7 +194,9 @@ namespace IngameScript
 				{
 					mapManager_ = new MapManager();
 					mapManager_.TerrainMap = new TerrainMap(Me.GetPosition(), new Vector3D(1000, 1000, 1000));
-					mapManager_.TerrainMap.UpDirection = -Controller.GetNaturalGravity();
+					mapManager_.UpDirection = -Controller.GetNaturalGravity();
+					mapManager_.SetX_Direction(Controller.WorldMatrix.Left);
+					mapManager_.SetY_Direction(Controller.WorldMatrix.Forward);
 					mapManager_.GenerateMovementPlanner();
 					points = 0;
 				}

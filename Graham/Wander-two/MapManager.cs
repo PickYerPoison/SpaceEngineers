@@ -26,14 +26,18 @@ namespace IngameScript
 			TerrainMap terrainMap_;
 			MovementPlanner movementPlanner_;
 			int numPoints_;
-			Vector3D addFromPoint;
+			Vector3D X_Axis;
+			Vector3D Y_Axis;
 
 			public MapManager()
 			{
 				terrainMap_ = new TerrainMap(new Vector3D(0, 0, 0), new Vector3D(0, 0, 0));
 				movementPlanner_ = new MovementPlanner(new Vector2D(0, 0), new Vector2D(0, 0));
 				numPoints_ = 0;
-				addFromPoint = new Vector3D(-37271.87, -21511.58, -43519.86);
+				CurrentLocation = new Vector3D(0, 0, 0);
+				UpDirection = new Vector3D(0, 1, 0);
+				X_Axis = new Vector3D(1, 0, 0);
+				Y_Axis = new Vector3D(0, 0, 1);
 			}
 
 			/// <summary>
@@ -42,15 +46,19 @@ namespace IngameScript
 			/// <remarks>Does not copy points. Must be done before adding any points.</remarks>
 			public void GenerateMovementPlanner()
 			{
-				var groundPlane = new PlaneD(addFromPoint, terrainMap_.UpDirection);
+				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
 
 				var referenceCenter = new Vector3D(terrainMap_.Center);
 				var projectedCenter = groundPlane.ProjectPoint(ref referenceCenter);
-				var flatCenter = new Vector2D(projectedCenter.X, projectedCenter.Z);
+				var projectedCenterX = (projectedCenter - CurrentLocation).Dot(X_Axis);
+				var projectedCenterY = (projectedCenter - CurrentLocation).Dot(Y_Axis);
+				var flatCenter = new Vector2D(projectedCenterX, projectedCenterY);
 
 				var referenceExtents = new Vector3D(terrainMap_.Extents);
 				var projectedExtents = groundPlane.ProjectPoint(ref referenceExtents);
-				var flatExtents = new Vector2D(Math.Abs(projectedExtents.X), Math.Abs(projectedExtents.Z));
+				var projectedExtentsX = (projectedExtents - CurrentLocation).Dot(X_Axis);
+				var projectedExtentsY = (projectedExtents - CurrentLocation).Dot(Y_Axis);
+				var flatExtents = new Vector2D(Math.Abs(projectedExtentsX), Math.Abs(projectedExtentsY));
 
 				movementPlanner_ = new MovementPlanner(flatCenter, flatExtents);
 			}
@@ -59,11 +67,18 @@ namespace IngameScript
 			{
 				var dangerousPoints = terrainMap_.AddPoint(point, timeout);
 
-				var groundPlane = new PlaneD(addFromPoint, terrainMap_.UpDirection);
+				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
+
+				/*var groundPlane = new PlaneD(new Vector3D(-37266.88, -21516.11, -43515.31),
+					new Vector3D(-37256.95, -21542.13, -43512.33),
+					new Vector3D(-37271.21, -21509.8, -43514.72));*/
 
 				var referencePoint = new Vector3D(point);
 				var projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
-				movementPlanner_.AddPoint(new Vector2D(projectedPoint.X, projectedPoint.Z), numPoints_, dangerousPoints.Count() > 0, timeout);
+				var projectedX = (projectedPoint - CurrentLocation).Dot(X_Axis);
+				var projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
+				//var rotatedPoint = Vector3D.Rotate(projectedPoint, MatrixD.CreateFromDir(Vector3D.Normalize(point), terrainMap_.UpDirection));
+				movementPlanner_.AddPoint(new Vector2D(projectedX, projectedY), numPoints_, dangerousPoints.Count() > 0, timeout);
 				numPoints_++;
 
 				foreach (var dangerousPoint in dangerousPoints)
@@ -99,6 +114,24 @@ namespace IngameScript
 					movementPlanner_ = value;
 				}
 			}
+
+			public void SetX_Direction(Vector3D xDirection)
+			{
+				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
+				xDirection.Normalize();
+				X_Axis = xDirection;// Vector3D.Normalize(groundPlane.ProjectPoint(ref xDirection));
+			}
+
+			public void SetY_Direction(Vector3D yDirection)
+			{
+				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
+				yDirection.Normalize();
+				Y_Axis = yDirection;// Vector3D.Normalize(groundPlane.ProjectPoint(ref yDirection));
+			}
+
+			public Vector3D CurrentLocation { get; set; }
+
+			public Vector3D UpDirection { get; set; }
 		}
 	}
 }

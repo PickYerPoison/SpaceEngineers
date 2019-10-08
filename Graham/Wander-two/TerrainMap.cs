@@ -548,18 +548,6 @@ namespace IngameScript
 				return angle > 50 || angle < -50;
 			}
 
-			public Vector3D UpDirection
-			{
-				get
-				{
-					return upDirection_;
-				}
-				set
-				{
-					upDirection_ = value;
-				}
-			}
-
 			public void UpdateTick(int ticksSinceLastUpdate)
 			{
 				currentTime_ += ticksSinceLastUpdate;
