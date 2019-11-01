@@ -48,7 +48,7 @@ Graham/Wander-two/MDK/MDK.paths.props
 Graham/Wander-two/MDK/MDK.options.props
 *.exe
 *.pdb
-Graham/Wander-two/obj
-Graham/Wander-two/.vs
-Graham/Wander-two/PointCloudViewer/bin
-Graham/Wander-two/PointCloudViewer/obj
+/Graham/Wander-two/obj/**
+/Graham/Wander-two/.vs/**
+/Graham/Wander-two/PointCloudViewer/bin/**
+/Graham/Wander-two/PointCloudViewer/obj/**
