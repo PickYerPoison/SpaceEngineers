@@ -41,11 +41,11 @@ namespace IngameScript
 			/// <summary>
 			/// Distance between each node.
 			/// </summary>
-			const double NODE_DISTANCE = 10;
+			const double NODE_DISTANCE = 2;
 
-			const int MAXIMUM_DEPTH = 30;
+			const int MAXIMUM_DEPTH = 50;
 			const int MINIMUM_POINTS = 5;
-			const int MAXIMUM_POINTS = 80000;
+			const int MAXIMUM_POINTS = 10;
 
 			QuadTree points_;
 
@@ -490,7 +490,7 @@ namespace IngameScript
 						points_.Add(point);
 						// Subdivide if reached minimum points (and not maximum depth)
 						if (points_.Count() >= MINIMUM_POINTS && depth_ < MAXIMUM_DEPTH &&
-							extents_.X > 1 && extents_.Y > 1)
+							extents_.X > 0.5 && extents_.Y > 0.5)
 						{
 							Subdivide();
 						}

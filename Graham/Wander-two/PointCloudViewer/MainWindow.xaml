@@ -56,7 +56,7 @@
                         <RowDefinition Height="1*" />
                         <RowDefinition Height="1*" />
                     </Grid.RowDefinitions>
-                    <TextBox Name="NodeAngleBox" Grid.Row="0" HorizontalAlignment="Center" TextWrapping="NoWrap" Text="0.0" VerticalAlignment="Center" Width="76" TextChanged="NodeAngleBox_TextChanged" />
+                    <TextBox Name="NodeAngleBox" Grid.Row="0" HorizontalAlignment="Center" TextWrapping="NoWrap" Text="0.0" VerticalAlignment="Center" Width="76" />
                     <Button Grid.Row="1" Name="NodeChildrenButton" Content="Create Children" HorizontalAlignment="Center" VerticalAlignment="Center" Width="90" Click="NodeChildrenButton_Click"/>
                 </Grid>
             </Grid>

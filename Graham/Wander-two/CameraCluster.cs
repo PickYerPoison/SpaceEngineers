@@ -68,7 +68,7 @@ namespace IngameScript
 				{
 					if (camera.CanScan(distance))
 					{
-						float randomPitch = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
+						float randomPitch = (float)(-randomGenerator_.NextDouble() * raycastConeLimit_);
 						float randomYaw = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
 
 						lastScanHit_ = camera.Raycast(distance, randomPitch, randomYaw);

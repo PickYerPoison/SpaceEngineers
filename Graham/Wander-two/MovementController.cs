@@ -114,6 +114,11 @@ namespace IngameScript
 				}
 			}
 
+			public void MoveTowards(Vector3D point)
+			{
+				Move(GetAngleFromCoM(point));
+			}
+
 			/// <summary>
 			/// Determines the maximum safe angle that the vehicle can attempt to turn at a given speed. NOT per wheel!
 			/// </summary>

@@ -26,8 +26,6 @@ namespace IngameScript
 			TerrainMap terrainMap_;
 			MovementPlanner movementPlanner_;
 			int numPoints_;
-			Vector3D X_Axis;
-			Vector3D Y_Axis;
 
 			public MapManager()
 			{
@@ -56,9 +54,9 @@ namespace IngameScript
 
 				var referenceExtents = new Vector3D(terrainMap_.Extents);
 				var projectedExtents = groundPlane.ProjectPoint(ref referenceExtents);
-				var projectedExtentsX = (projectedExtents - CurrentLocation).Dot(X_Axis);
-				var projectedExtentsY = (projectedExtents - CurrentLocation).Dot(Y_Axis);
-				var flatExtents = new Vector2D(Math.Abs(projectedExtentsX), Math.Abs(projectedExtentsY));
+				var maxExtent = Math.Abs((projectedExtents - CurrentLocation).Dot(X_Axis));
+				maxExtent = Math.Max(maxExtent, Math.Abs((projectedExtents - CurrentLocation).Dot(Y_Axis)));
+				var flatExtents = new Vector2D(maxExtent, maxExtent);
 
 				movementPlanner_ = new MovementPlanner(flatCenter, flatExtents);
 			}
@@ -69,15 +67,10 @@ namespace IngameScript
 
 				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
 
-				/*var groundPlane = new PlaneD(new Vector3D(-37266.88, -21516.11, -43515.31),
-					new Vector3D(-37256.95, -21542.13, -43512.33),
-					new Vector3D(-37271.21, -21509.8, -43514.72));*/
-
 				var referencePoint = new Vector3D(point);
 				var projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
 				var projectedX = (projectedPoint - CurrentLocation).Dot(X_Axis);
 				var projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
-				//var rotatedPoint = Vector3D.Rotate(projectedPoint, MatrixD.CreateFromDir(Vector3D.Normalize(point), terrainMap_.UpDirection));
 				movementPlanner_.AddPoint(new Vector2D(projectedX, projectedY), numPoints_, dangerousPoints.Count() > 0, timeout);
 				numPoints_++;
 
@@ -86,7 +79,9 @@ namespace IngameScript
 					// Add to movement planner
 					referencePoint = new Vector3D(dangerousPoint.Position);
 					projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
-					movementPlanner_.AddPoint(new Vector2D(projectedPoint.X, projectedPoint.Z), dangerousPoint.ID, true, dangerousPoint.Timeout);
+					projectedX = (projectedPoint - CurrentLocation).Dot(X_Axis);
+					projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
+					movementPlanner_.AddPoint(new Vector2D(projectedX, projectedY), dangerousPoint.ID, true, dangerousPoint.Timeout);
 				}
 			}
 
@@ -131,7 +126,20 @@ namespace IngameScript
 
 			public Vector3D CurrentLocation { get; set; }
 
-			public Vector3D UpDirection { get; set; }
+			public Vector3D UpDirection
+			{
+				get
+				{
+					return terrainMap_.UpDirection;
+				}
+				set
+				{
+					terrainMap_.UpDirection = value;
+				}
+			}
+
+			public Vector3D X_Axis { get; set; }
+			public Vector3D Y_Axis { get; set; }
 		}
 	}
 }

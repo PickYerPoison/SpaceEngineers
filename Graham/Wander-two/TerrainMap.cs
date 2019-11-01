@@ -23,14 +23,13 @@ namespace IngameScript
 	{
 		public class TerrainMap
 		{
-			const int MAXIMUM_DEPTH = 30;
+			const int MAXIMUM_DEPTH = 50;
 			const int MINIMUM_POINTS = 5;
-			const int MAXIMUM_POINTS = 80000;
+			const int MAXIMUM_POINTS = 5;
 			int pointsAdded_;
 			int currentTime_;
 			OcTree points_;
 			Collider edgeDetectionCollider_;
-			Vector3D upDirection_;
 
 			public interface Collider
 			{
@@ -305,6 +304,11 @@ namespace IngameScript
 						{
 							Subdivide();
 						}
+
+						if (points_.Count() == MAXIMUM_POINTS)
+						{
+							points_.RemoveAt(0);
+						}
 					}
 				}
 
@@ -343,8 +347,8 @@ namespace IngameScript
 								if (collider.Contains(points_[i].Position))
 								{
 									collisions.Add(points_[i]);
-									i++;
-									//points_.RemoveAt(i);
+									//i++;
+									points_.RemoveAt(i);
 								}
 								else
 								{
@@ -491,7 +495,7 @@ namespace IngameScript
 				pointsAdded_ = 0;
 				points_ = new OcTree(center, extents, 0);
 				currentTime_ = 0;
-				upDirection_ = new Vector3D(0, 0, 0);
+				UpDirection = new Vector3D(0, 0, 0);
 
 				// The radius of a small grid large wheel is 1.25 (2.5 small blocks)
 				edgeDetectionCollider_ = new HollowSphereCollider(center, 1.25, 3.0);
@@ -542,7 +546,7 @@ namespace IngameScript
 			/// </summary>
 			bool IsEdgeDangerous(Vector3D p1, Vector3D p2)
 			{
-				var dot = VRageMath.Vector3D.Dot(upDirection_, Vector3D.Normalize(p2 - p1));
+				var dot = VRageMath.Vector3D.Dot(UpDirection, Vector3D.Normalize(p2 - p1));
 				var angle = (90 - Math.Acos(dot) * 180 / Math.PI);
 
 				return angle > 50 || angle < -50;
@@ -588,6 +592,8 @@ namespace IngameScript
 					return points_.Extents;
 				}
 			}
+
+			public Vector3D UpDirection { get; set; }
 		}
 
 	}
