@@ -81,12 +81,15 @@ namespace IngameScript
 			points = 0;
 
 			recording = false;
-
+			
 			var x = new List<IMyShipController>();
 			GridTerminalSystem.GetBlocksOfType<IMyShipController>(x);
 			Controller = x.First();
 			var g = Controller.GetNaturalGravity();
-			Me.CustomData = g.X.ToString() + "," + g.Y.ToString() + "," + g.Z.ToString();
+			Me.CustomData = g.X.ToString() + "," + g.Y.ToString() + "," + g.Z.ToString() + "\n";
+
+			var p = Controller.GetPosition();
+			Me.CustomData += p.X.ToString() + "," + p.Y.ToString() + "," + p.Z.ToString() + "\n";
 
 			mapManager_ = new MapManager();
 			mapManager_.TerrainMap = new TerrainMap(Controller.GetPosition(), new Vector3D(500, 500, 500));
@@ -96,7 +99,7 @@ namespace IngameScript
 			mapManager_.GenerateMovementPlanner();
 
 			var lwm = Controller.WorldMatrix.Left;
-			Me.CustomData += lwm.X.ToString() + "," + lwm.Y.ToString() + "," + lwm.Z.ToString();
+			Me.CustomData += lwm.X.ToString() + "," + lwm.Y.ToString() + "," + lwm.Z.ToString() + "\n";
 			lwm = Controller.WorldMatrix.Forward;
 			Me.CustomData += lwm.X.ToString() + "," + lwm.Y.ToString() + "," + lwm.Z.ToString();
 

@@ -87,7 +87,18 @@ namespace PointCloudViewer
 		{
 			foreach (var point in points)
 			{
-				Draw2D_Point(point);
+				if (!point.Dangerous)
+				{
+					Draw2D_Point(point);
+				}
+			}
+
+			foreach (var point in points)
+			{
+				if (point.Dangerous)
+				{
+					Draw2D_Point(point);
+				}
 			}
 		}
 		
