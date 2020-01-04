@@ -29,6 +29,11 @@ namespace IngameScript
 			const double MAXIMUM_TURN_DEGREES = 30;
 
 			/// <summary>
+			/// The maximum speed the vehicle will attempt to travel at.
+			/// </summary>
+			const double MAXIMUM_SPEED = 5;
+
+			/// <summary>
 			/// The number of additional angles motion planning should consider, beyond no turning and both extremes. If greater than zero, the extreme angle is divided by this to obtain the interval between angles.
 			/// </summary>
 			const int EXTRA_TURN_ANGLES = 0;
@@ -37,11 +42,6 @@ namespace IngameScript
 			/// How deep the planning should go.
 			/// </summary>
 			const int MAXIMUM_THINKAHEAD = 5;
-
-			/// <summary>
-			/// Distance between each node.
-			/// </summary>
-			const double NODE_DISTANCE = 2;
 
 			const int MAXIMUM_DEPTH = 50;
 			const int MINIMUM_POINTS = 5;
@@ -294,9 +294,11 @@ namespace IngameScript
 				public void CreateChildNodes(ref QuadTree tree)
 				{
 					// Create extremes
-					CreateChildNode(ref tree, facingAngle_);
-					CreateChildNode(ref tree, facingAngle_ + DegreesToRadians(MAXIMUM_TURN_DEGREES));
-					CreateChildNode(ref tree, facingAngle_ - DegreesToRadians(MAXIMUM_TURN_DEGREES));
+					CreateChildNode(ref tree, desiredSpeed_, facingAngle_);
+					CreateChildNode(ref tree, Math.Max(0, desiredSpeed_ - 5), facingAngle_);
+					CreateChildNode(ref tree, Math.Max(MAXIMUM_SPEED, desiredSpeed_ + 5), facingAngle_);
+					CreateChildNode(ref tree, desiredSpeed_, facingAngle_ + DegreesToRadians(MAXIMUM_TURN_DEGREES));
+					CreateChildNode(ref tree, desiredSpeed_, facingAngle_ - DegreesToRadians(MAXIMUM_TURN_DEGREES));
 
 					// Create additional angles
 					/*if (EXTRA_TURN_ANGLES > 0)
@@ -312,11 +314,11 @@ namespace IngameScript
 					GeneratedChildren = true;
 				}
 
-				void CreateChildNode(ref QuadTree tree, double angle)
+				void CreateChildNode(ref QuadTree tree, double desiredSpeed, double angle)
 				{
-					var newPosition = new Vector2D(Math.Cos(angle) * NODE_DISTANCE, Math.Sin(angle) * NODE_DISTANCE) + position_;
+					var newPosition = new Vector2D(Math.Cos(angle) * desiredSpeed_, Math.Sin(angle) * desiredSpeed_) + position_;
 
-					var newNode = new MovementNode(newPosition, angle, desiredSpeed_, goal_, depth_ + 1);
+					var newNode = new MovementNode(newPosition, angle, desiredSpeed, goal_, depth_ + 1);
 
 					if (tree.AddNode(newNode))
 					{
@@ -836,12 +838,14 @@ namespace IngameScript
 
 			public void CreateChildren(MovementNode node)
 			{
-				foreach (var child in node.Children)
+				if (node.GeneratedChildren)
 				{
-					CreateChildren(child);
+					foreach (var child in node.Children)
+					{
+						CreateChildren(child);
+					}
 				}
-
-				if (!node.GeneratedChildren)
+				else
 				{
 					node.CreateChildNodes(ref points_);
 				}

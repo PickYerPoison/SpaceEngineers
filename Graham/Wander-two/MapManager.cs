@@ -67,12 +67,15 @@ namespace IngameScript
 
 				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
 
-				var referencePoint = new Vector3D(point);
+				/*var referencePoint = new Vector3D(point);
 				var projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
 				var projectedX = (projectedPoint - CurrentLocation).Dot(X_Axis);
 				var projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
 				movementPlanner_.AddPoint(new Vector2D(projectedX, projectedY), numPoints_, dangerousPoints.Count() > 0, timeout);
-				numPoints_++;
+				numPoints_++;*/
+
+				Vector3D referencePoint, projectedPoint;
+				double projectedX, projectedY;
 
 				foreach (var dangerousPoint in dangerousPoints)
 				{
@@ -83,6 +86,35 @@ namespace IngameScript
 					projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
 					movementPlanner_.AddPoint(new Vector2D(projectedX, projectedY), dangerousPoint.ID, true, dangerousPoint.Timeout);
 				}
+			}
+
+			public MovementPlanner.MovementNode GenerateNode(Vector3D position, double facingAngle, double desiredSpeed, Vector3D goal)
+			{
+				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
+
+				var referencePoint = new Vector3D(position);
+				var projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
+				var projectedX = (projectedPoint - CurrentLocation).Dot(X_Axis);
+				var projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
+				var projectedPosition = new Vector2D(projectedX, projectedY);
+
+				referencePoint = new Vector3D(goal);
+				projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
+				projectedX = (projectedPoint - CurrentLocation).Dot(X_Axis);
+				projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
+				var projectedGoal = new Vector2D(projectedX, projectedY);
+
+				return new MovementPlanner.MovementNode(projectedPosition, facingAngle, desiredSpeed, projectedGoal, 0);
+			}
+
+			public Vector2D ProjectPoint(Vector3D point)
+			{
+				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
+				var referencePoint = point;
+				var projectedPoint = groundPlane.ProjectPoint(ref referencePoint);
+				var projectedX = (projectedPoint - CurrentLocation).Dot(X_Axis);
+				var projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
+				return new Vector2D(projectedX, projectedY);
 			}
 
 			public TerrainMap TerrainMap
@@ -114,14 +146,14 @@ namespace IngameScript
 			{
 				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
 				xDirection.Normalize();
-				X_Axis = xDirection;// Vector3D.Normalize(groundPlane.ProjectPoint(ref xDirection));
+				X_Axis = xDirection;
 			}
 
 			public void SetY_Direction(Vector3D yDirection)
 			{
 				var groundPlane = new PlaneD(CurrentLocation, UpDirection);
 				yDirection.Normalize();
-				Y_Axis = yDirection;// Vector3D.Normalize(groundPlane.ProjectPoint(ref yDirection));
+				Y_Axis = yDirection;
 			}
 
 			public Vector3D CurrentLocation { get; set; }

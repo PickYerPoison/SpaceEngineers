@@ -21,51 +21,23 @@ namespace IngameScript
 {
     public partial class Program : MyGridProgram
     {
-        // This file contains your actual script.
-        //
-        // You can either keep all your code here, or you can create separate
-        // code files to make your program easier to navigate while coding.
-        //
-        // In order to add a new utility class, right-click on your project, 
-        // select 'New' then 'Add Item...'. Now find the 'Space Engineers'
-        // category under 'Visual C# Items' on the left hand side, and select
-        // 'Utility Class' in the main area. Name it in the box below, and
-        // press OK. This utility class will be merged in with your code when
-        // deploying your final script.
-        //
-        // You can also simply create a new utility class manually, you don't
-        // have to use the template if you don't want to. Just do so the first
-        // time to see what a utility class looks like.
-        // 
-        // Go to:
-        // https://github.com/malware-dev/MDK-SE/wiki/Quick-Introduction-to-Space-Engineers-Ingame-Scripts
-        //
-        // to learn more about ingame scripts.
-
 		CameraCluster cameras;
 		int points;
 		bool recording;
+		int tick;
 
 		MapManager mapManager_;
+		MovementController movementController_;
 
 		IMyShipController Controller;
 
 		List<MovementPlanner.Point2D> finalPoints;
 		List<Vector3D> hitLocations;
 
+		Vector3D goal;
+
 		public Program()
         {
-            // The constructor, called only once every session and
-            // always before any other method is called. Use it to
-            // initialize your script. 
-            //     
-            // The constructor is optional and can be removed if not
-            // needed.
-            // 
-            // It's recommended to set Runtime.UpdateFrequency 
-            // here, which will allow your script to run itself without a 
-            // timer block.
-
             Runtime.UpdateFrequency = UpdateFrequency.Update1;
 
 			cameras = new CameraCluster();
@@ -105,7 +77,21 @@ namespace IngameScript
 
 			hitLocations = new List<Vector3D>();
 			finalPoints = new List<MovementPlanner.Point2D>();
-        }
+
+			movementController_ = new MovementController();
+			movementController_.Controller = Controller;
+
+			var wheels = new List<IMyMotorSuspension>();
+			GridTerminalSystem.GetBlocksOfType<IMyMotorSuspension>(wheels);
+			foreach (var wheel in wheels)
+			{
+				movementController_.AddWheel(wheel);
+			}
+
+			tick = 0;
+
+			goal = new Vector3D();
+		}
 
         public void Save()
         {
@@ -119,28 +105,46 @@ namespace IngameScript
 
 		public void Main(string argument, UpdateType updateSource)
 		{
-			// Update terrain map and movement planner
+			// Per-tick updates
 			if ((updateSource & UpdateType.Update1) != 0)
 			{
-				if (recording)
+				// Update 2D position for MovementController
+				movementController_.Position2D = mapManager_.ProjectPoint(movementController_.Position3D);
+
+				switch (tick)
 				{
-					mapManager_.UpDirection = -Controller.GetNaturalGravity();
+					case 0: // Generate movement nodes once per second
+						// THIS ISN'T ACTUALLY THE FACING DIRECTION, FIX THIS!
+						var planningNode = mapManager_.GenerateNode(Me.GetPosition(), 0, movementController_.DesiredSpeed, goal);
 
-					var newPoints = cameras.ScanRandomAll(50);	
-
-					foreach (var point in newPoints)
-					{
-						if (!point.IsEmpty())
+						for (int i = 0; i < 5; i++)
 						{
-							hitLocations.Add((Vector3D)point.HitPosition);
-							points++;
-							//mapManager_.AddPoint((Vector3D)point.HitPosition, 500);
+							mapManager_.MovementPlanner.CreateChildren(planningNode);
 						}
-					}
+						break;
+						
+					default: // Scan points on non-dedicated ticks
+						if (recording)
+						{
+							mapManager_.UpDirection = -Controller.GetNaturalGravity();
 
-					Echo(points.ToString());
-					Echo(hitLocations.Count().ToString());
-					Me.CustomData = points.ToString();
+							var newPoints = cameras.ScanRandomAll(50);
+
+							foreach (var point in newPoints)
+							{
+								if (!point.IsEmpty())
+								{
+									hitLocations.Add((Vector3D)point.HitPosition);
+									points++;
+									//mapManager_.AddPoint((Vector3D)point.HitPosition, 500);
+								}
+							}
+
+							Echo(points.ToString());
+							Echo(hitLocations.Count().ToString());
+							Me.CustomData = points.ToString();
+						}
+						break;
 				}
 			}
 			else

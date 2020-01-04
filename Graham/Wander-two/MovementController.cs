@@ -39,6 +39,14 @@ namespace IngameScript
 			List<VehicleWheel> Wheels;
 			public IMyShipController Controller { get; set; }
 			public double DesiredSpeed { get; set; }
+			public Vector2D Position2D { get; set; }
+			public Vector3D Position3D
+			{
+				get
+				{
+					return Controller.CenterOfMass;
+				}
+			}
 
 			Vector3D CenterOfMass;
 			MatrixD CenterOfMassMatrix;
@@ -127,7 +135,7 @@ namespace IngameScript
 				return 30;
 			}
 
-			double GetAngleFromCoM(Vector3D point)
+			public double GetAngleFromCoM(Vector3D point)
 			{
 				var localPosition = Vector3D.Transform(point, MatrixD.Invert(CenterOfMassMatrix));
 				return Math.Atan2(-localPosition.X, -localPosition.Z);

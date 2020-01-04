@@ -35,13 +35,15 @@ namespace IngameScript
 			Random randomGenerator_;
 			List<IMyCameraBlock> cameraList_;
 			MyDetectedEntityInfo lastScanHit_;
-			double raycastConeLimit_;
+			double raycastConeLimitYaw_;
+			double raycastConeLimitPitch_;
 
 			public CameraCluster()
 			{
 				cameraList_ = new List<IMyCameraBlock>();
 				randomGenerator_ = new Random();
-				raycastConeLimit_ = 45;     // 45 is the server default
+				raycastConeLimitPitch_ = 45; // 45 is the server default
+				raycastConeLimitYaw_ = 25;
 				lastScanHit_ = default(MyDetectedEntityInfo);
 			}
 
@@ -68,8 +70,8 @@ namespace IngameScript
 				{
 					if (camera.CanScan(distance))
 					{
-						float randomPitch = (float)(-randomGenerator_.NextDouble() * raycastConeLimit_);
-						float randomYaw = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
+						float randomPitch = (float)(-randomGenerator_.NextDouble() * raycastConeLimitPitch_);
+						float randomYaw = (float)(randomGenerator_.NextDouble() * raycastConeLimitYaw_ * 2 - raycastConeLimitYaw_);
 
 						lastScanHit_ = camera.Raycast(distance, randomPitch, randomYaw);
 
@@ -87,8 +89,8 @@ namespace IngameScript
 				{
 					if (camera.CanScan(distance))
 					{
-						float randomPitch = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
-						float randomYaw = (float)(randomGenerator_.NextDouble() * raycastConeLimit_ * 2 - raycastConeLimit_);
+						float randomPitch = (float)(-randomGenerator_.NextDouble() * raycastConeLimitPitch_);
+						float randomYaw = (float)(randomGenerator_.NextDouble() * raycastConeLimitYaw_ * 2 - raycastConeLimitYaw_);
 
 						lastScanHit_ = camera.Raycast(distance, randomPitch, randomYaw);
 
@@ -130,28 +132,32 @@ namespace IngameScript
 			}
 
 			/// <summary>
-			/// The maximum positive angle the camera can apply to pitch and yaw for raycasting.
+			/// The maximum positive angle the camera can apply to pitch for raycasting.
 			/// </summary>
-			public double RaycastConeLimit
+			public double RaycastConeLimitPitch
 			{
 				get
 				{
-					return raycastConeLimit_;
+					return raycastConeLimitPitch_;
 				}
 				set
 				{
-					if (value > 45)
-					{
-						raycastConeLimit_ = 45;
-					}
-					else if (value < 0)
-					{
-						raycastConeLimit_ = 0;
-					}
-					else
-					{
-						raycastConeLimit_ = value;
-					}
+					raycastConeLimitPitch_ = value;
+				}
+			}
+			
+			/// <summary>
+			/// The maximum positive angle the camera can apply to yaw for raycasting.
+			/// </summary>
+			public double RaycastConeLimitYaw
+			{
+				get
+				{
+					return raycastConeLimitYaw_;
+				}
+				set
+				{
+					raycastConeLimitYaw_ = value;
 				}
 			}
 		}
