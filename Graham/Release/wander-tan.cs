@@ -20,6 +20,7 @@ public const float RPM_RAMPUP = MAX_RPM / 30f;
 public const float DANGEROUS_VELOCITY = 10f;
 public static float STOP_DISTANCE = 2f;
 public const float ANGLE_ADJUST = 0.01f;
+public const int BACKDOWN_DEFAULT = 100;
  
 // turret constants
 public const float TURRET_MAX_ROT_SPEED = 10f;
@@ -508,7 +509,7 @@ public void Main(string argument)
                 // check cameras for forcing backdown
                 if (!RaycastCheckTerrain(GridTerminalSystem, ReferenceBlock))
                 {
-                    backdown = 50;
+                    backdown = BACKDOWN_DEFAULT;
                 }
                 
                 if (Controller != null)
@@ -517,7 +518,7 @@ public void Main(string argument)
                     var fv = ReferenceBlock.WorldMatrix.Forward; 
                     var angle = Math.Acos(fv.Dot(gv) / (fv.Length() * gv.Length())); 
                     if (angle > Math.PI * 3/4 || angle < Math.PI * 1/4)
-                        backdown = 50;
+                        backdown = BACKDOWN_DEFAULT;
                 }
                 
                 // follow route if set to do that

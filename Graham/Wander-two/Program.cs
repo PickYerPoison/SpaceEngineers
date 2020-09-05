@@ -114,8 +114,14 @@ namespace IngameScript
 				switch (tick)
 				{
 					case 0: // Generate movement nodes once per second
-						// THIS ISN'T ACTUALLY THE FACING DIRECTION, FIX THIS!
-						var planningNode = mapManager_.GenerateNode(Me.GetPosition(), 0, movementController_.DesiredSpeed, goal);
+
+						// PPP: Facing direction might not be accurate, but I think it doesn't matter what it is as long as it's consistent.
+
+						var position_2D = mapManager_.ProjectPoint(Me.GetPosition());
+						var goal_2D = mapManager_.ProjectPoint(goal);
+						var facing_2D = mapManager_.ProjectPoint(Me.WorldMatrix.Forward);
+						var facing_direction = Math.Atan(facing_2D.X / facing_2D.Y);
+						var planningNode = mapManager_.GenerateNode(position_2D, facing_direction, movementController_.DesiredSpeed, goal_2D);
 
 						for (int i = 0; i < 5; i++)
 						{
@@ -144,6 +150,9 @@ namespace IngameScript
 							Echo(hitLocations.Count().ToString());
 							Me.CustomData = points.ToString();
 						}
+
+						// TODO: ADD STEERING LOGIC
+
 						break;
 				}
 			}
