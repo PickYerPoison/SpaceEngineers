@@ -50,3 +50,10 @@
 /Graham/Wander-two/PointCloudViewer/obj/**
 /Graham/Sandbox/MDK/MDK.paths.props
 /Graham/Sandbox/.vs/Sandbox/v16/.suo
+Lily/Wander-two/obj/x64/Debug/.NETFramework,Version=v4.6.1.AssemblyAttributes.cs
+Lily/Wander-two/obj/x64/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+*.cache
+Lily/Wander-two/PointCloudViewer/obj/Debug/.NETFramework,Version=v4.6.1.AssemblyAttributes.cs
+Lily/Wander-two/PointCloudViewer/obj/Debug/MainWindow.baml
+*.cs
+Lily/Wander-two/PointCloudViewer/obj/Debug/PointCloudViewer_MarkupCompile.lref
