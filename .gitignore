@@ -52,3 +52,5 @@ Graham/Wander-two/MDK/MDK.options.props
 /Graham/Wander-two/.vs/**
 /Graham/Wander-two/PointCloudViewer/bin/**
 /Graham/Wander-two/PointCloudViewer/obj/**
+Graham/Sandbox/MDK/MDK.paths.props
+Graham/Sandbox/.vs/Sandbox/v16/.suo
