@@ -54,6 +54,3 @@
 /Lily/Wander-two/MDK/MDK.paths.props
 *.cache
 *.suo
-/Lily/Wander-two/PointCloudViewer/obj/Debug/MainWindow.baml
-/Lily/Wander-two/PointCloudViewer/obj/Debug/MainWindow.g.cs
-/Lily/Wander-two/PointCloudViewer/obj/Debug/PointCloudViewer_MarkupCompile.lref
