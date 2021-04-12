@@ -87,6 +87,10 @@ namespace IngameScript
 					movementPlanner_.AddPoint(new Vector2D(projectedX, projectedY), dangerousPoint.ID, true, dangerousPoint.Timeout);
 				}
 			}
+			public MovementPlanner.MovementNode GenerateNode(Vector2D position, double facingAngle, double desiredSpeed, Vector2D goal)
+			{
+				return new MovementPlanner.MovementNode(position, facingAngle, desiredSpeed, goal, 0);
+			}
 
 			public MovementPlanner.MovementNode GenerateNode(Vector3D position, double facingAngle, double desiredSpeed, Vector3D goal)
 			{
@@ -104,7 +108,7 @@ namespace IngameScript
 				projectedY = (projectedPoint - CurrentLocation).Dot(Y_Axis);
 				var projectedGoal = new Vector2D(projectedX, projectedY);
 
-				return new MovementPlanner.MovementNode(projectedPosition, facingAngle, desiredSpeed, projectedGoal, 0);
+				return GenerateNode(projectedPosition, facingAngle, desiredSpeed, projectedGoal);
 			}
 
 			public Vector2D ProjectPoint(Vector3D point)
