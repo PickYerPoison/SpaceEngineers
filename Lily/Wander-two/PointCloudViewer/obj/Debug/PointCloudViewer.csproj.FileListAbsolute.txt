@@ -237,3 +237,6 @@ C:\Users\grncp\Documents\GitHub\SpaceEngineers\Graham\Wander-two\PointCloudViewe
 C:\Users\grncp\Documents\GitHub\SpaceEngineers\Graham\Wander-two\PointCloudViewer\obj\Debug\PointCloudViewer.csproj.CopyComplete
 C:\Users\grncp\Documents\GitHub\SpaceEngineers\Graham\Wander-two\PointCloudViewer\obj\Debug\PointCloudViewer.exe
 C:\Users\grncp\Documents\GitHub\SpaceEngineers\Graham\Wander-two\PointCloudViewer\obj\Debug\PointCloudViewer.pdb
+C:\Users\grncp\Documents\GitHub\SpaceEngineers\Lily\Wander-two\PointCloudViewer\obj\Debug\PointCloudViewer.csprojAssemblyReference.cache
+C:\Users\grncp\Documents\GitHub\SpaceEngineers\Lily\Wander-two\PointCloudViewer\obj\Debug\App.g.cs
+C:\Users\grncp\Documents\GitHub\SpaceEngineers\Lily\Wander-two\PointCloudViewer\obj\Debug\PointCloudViewer_MarkupCompile.cache
