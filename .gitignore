@@ -49,10 +49,8 @@
 /Lily/Wander-two/PointCloudViewer/bin/**
 /Lily/Wander-two/PointCloudViewer/obj/**
 /Lily/Sandbox/MDK/MDK.paths.props
-/Lily/Sandbox/.vs/Sandbox/v16/.suo
 *.cache
 *.zip
-/Lily/Wander-two/.vs/Wander-two/v16/.suo
 /Lily/Wander-two/MDK/MDK.paths.props
 *.cache
 *.suo
